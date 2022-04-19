@@ -6,19 +6,19 @@ using System.Threading.Tasks;
 
 namespace FtxApi.Model
 {
-    public class BalanceResult
+    public class MarketResult
     {
-        public BalanceResult()
+        public MarketResult()
         {
-            result = new List<Balance>();
+            result = new List<Market>();
         }
 
         public bool success { get; set; }
-        public List<Balance> result { get; set; }
+        public List<Market> result { get; set; }
         
     }
 
-    public class Balance
+    public class Market
     {
         public string coin { get; set; }
         public decimal total { get; set; }

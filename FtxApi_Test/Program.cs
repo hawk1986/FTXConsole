@@ -100,10 +100,11 @@ namespace FtxApi_Test
             var r8 = api.GetSingleMarketsAsync(ins).Result;
             Console.WriteLine(r8);
  
-            var r14 = api.GetCoinAsync().Result;
-            Console.WriteLine(r14);
+            //var r14 = api.GetCoinAsync().Result;
+            //Console.WriteLine(r14);
+
             var r15 = api.GetBalancesAsync().Result;
-            Result BalanceResult = JsonConvert.DeserializeObject<Result>(r15);
+            BalanceResult BalanceResult = JsonConvert.DeserializeObject<BalanceResult>(r15);
             var BalanceList = BalanceResult.result;
             foreach (var item in BalanceList)
             {
@@ -116,11 +117,16 @@ namespace FtxApi_Test
                     Console.WriteLine("AvailableWithoutBorrow: " + item.availableWithoutBorrow);
                     Console.WriteLine("SpotBorrow: " + item.spotBorrow);
                 }
-            } 
+            }
+
+            // Buy Condition
 
             var r20 = api.PlaceOrderAsync(ins, SideType.buy, 1000, OrderType.limit, 0.001m, false).Result;
-            var r20_1 = api.PlaceStopOrderAsync(ins, SideType.buy, 1000, 0.001m, false).Result;
-           
+
+
+            //var r20_1 = api.PlaceStopOrderAsync(ins, SideType.buy, 1000, 0.001m, false).Result;
+
+
         }
         #endregion
 
