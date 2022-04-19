@@ -123,6 +123,7 @@
     <Compile Include="Enums\SideType.cs" />
     <Compile Include="Enums\TriggerType.cs" />
     <Compile Include="FtxRestApi.cs" />
+    <Compile Include="Model\Market.cs" />
     <Compile Include="Model\Balance.cs" />
     <Compile Include="Util\FtxWebSockerRequestGenerator.cs" />
     <Compile Include="FtxWebSocketApi.cs" />
