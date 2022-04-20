@@ -141,7 +141,7 @@ namespace FtxApi_Test
                     MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
                     var Market_Buy = MarketResult_Buy.result;
                     bidPrice = Market_Buy.bid ?? 0;
-                    buyPrice = ((bidPrice * 100) - 1) / 100;
+                    buyPrice = ((bidPrice * 100) - 2) / 100;
                     
                     // Buy Condition
                     var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 100, false).Result;
@@ -202,7 +202,7 @@ namespace FtxApi_Test
                                 //sellPrice = ((buyPrice * 100) + 2) / 100;
                                 Console.WriteLine("Waiting for selling...");
                                 Console.WriteLine("Profit: " + profit);
-                                if ((bidPrice_sell * 100) - (buyPrice * 100) >= (15 / 10))
+                                if ((bidPrice_sell * 100) - (buyPrice * 100) >= 2)
                                 {
                                     var rSell = api.PlaceOrderAsync(ins, SideType.sell, bidPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
                                     Console.WriteLine(rSell);
