@@ -141,7 +141,7 @@ namespace FtxApi_Test
                     MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
                     var Market_Buy = MarketResult_Buy.result;
                     bidPrice = Market_Buy.bid ?? 0;
-                    buyPrice = ((bidPrice * 100) - 2) / 100;
+                    buyPrice = ((bidPrice * 100)) / 100;
                     
                     // Buy Condition
                     var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 100, false).Result;
