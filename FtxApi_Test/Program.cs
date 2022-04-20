@@ -108,7 +108,7 @@ namespace FtxApi_Test
         {
             var ins = "APE/USD";
             bool isBought = false;
-            decimal askPrice = 0;
+            decimal bidPrice = 0;
             decimal buyPrice = 0;
             decimal sellPrice = 0;
 
@@ -135,8 +135,8 @@ namespace FtxApi_Test
                     var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
                     MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
                     var Market_Buy = MarketResult_Buy.result;
-                    askPrice = Market_Buy.ask ?? 0;
-                    buyPrice = ((askPrice * 100) -3)/100;
+                    bidPrice = Market_Buy.bid ?? 0;
+                    buyPrice = bidPrice;
                     
                     decimal totalCoin = 0;
 
@@ -177,7 +177,7 @@ namespace FtxApi_Test
                 #endregion
                 
                 #region Sell
-                sellPrice = ((buyPrice * 100) + 5) / 100;
+                sellPrice = ((buyPrice * 100) + 2) / 100;
                 Console.WriteLine("Sell Price: " + sellPrice);
                 while (isBought)
                 {
