@@ -181,7 +181,7 @@ namespace FtxApi_Test
                 #region Sell
                 while (isBought)
                 {
-                    Console.WriteLine("等待販賣中...");
+                    
                     // Sell Condition
                     var getApeBalance = api.GetBalancesAsync().Result;
                     BalanceResult ApeBalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getApeBalance);
@@ -196,7 +196,10 @@ namespace FtxApi_Test
                                 MarketResult MarketResult_Sell = JsonConvert.DeserializeObject<MarketResult>(sellMKPrice);
                                 var Market_Sell = MarketResult_Sell.result;
                                 bidPrice_sell = Market_Sell.bid ?? 0;
+                                var profix = ((bidPrice_sell * 100) - (buyPrice * 100)) / 100;
                                 //sellPrice = ((buyPrice * 100) + 2) / 100;
+                                Console.WriteLine("等待販賣中...");
+                                Console.WriteLine("Profix: " + profix);
                                 if ((bidPrice_sell * 100) - (buyPrice * 100) > 2)
                                 {
                                     var rSell = api.PlaceOrderAsync(ins, SideType.sell, bidPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
