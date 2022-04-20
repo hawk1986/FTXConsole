@@ -21,10 +21,10 @@ namespace FtxApi.Model
     public class Balance
     {
         public string coin { get; set; }
-        public decimal total { get; set; }
-        public decimal free { get; set; }
-        public decimal availableWithoutBorrow { get; set; }
-        public decimal usdValue { get; set; }
-        public decimal spotBorrow { get; set; }
+        public decimal? total { get; set; }
+        public decimal? free { get; set; }
+        public decimal? availableWithoutBorrow { get; set; }
+        public decimal? usdValue { get; set; }
+        public decimal? spotBorrow { get; set; }
     }
 }

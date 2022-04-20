@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FtxApi;
 using FtxApi.Enums;
@@ -16,7 +17,18 @@ namespace FtxApi_Test
             var api = new FtxRestApi(client);
             var wsApi = new FtxWebSocketApi("wss://ftx.com/ws/");
 
-            BuyAndSell(api).Wait();
+            try
+            {
+                BuyAndSell(api).Wait();
+            }
+            catch (Exception ex) { 
+            
+            }
+            finally {
+                BuyAndSell(api).Wait();
+            }
+
+
             //RestTests(api).Wait();
             //WebSocketTests(wsApi, client).Wait();
 
@@ -94,39 +106,105 @@ namespace FtxApi_Test
         #region BuyAndSell
         private static async Task BuyAndSell(FtxRestApi api)
         {
-            var ins = "STG/USD";
-            var ins1 = "APE/USD";
+            var ins = "APE/USD";
+            bool isBought = false;
+            decimal askPrice = 0;
+            decimal buyPrice = 0;
+            decimal sellPrice = 0;
 
-            var r8 = api.GetSingleMarketsAsync(ins).Result;
-            Console.WriteLine(r8);
- 
-            //var r14 = api.GetCoinAsync().Result;
-            //Console.WriteLine(r14);
-
-            var r15 = api.GetBalancesAsync().Result;
-            BalanceResult BalanceResult = JsonConvert.DeserializeObject<BalanceResult>(r15);
-            var BalanceList = BalanceResult.result;
-            foreach (var item in BalanceList)
+            while (true)
             {
-                if (item.coin == "STG")
+                #region Market Price (Buy)
+                while (!isBought)
                 {
-                    Console.WriteLine("Coin: " + item.coin);
-                    Console.WriteLine("UsdValue: " + item.usdValue);
-                    Console.WriteLine("Total: " + item.total);
-                    Console.WriteLine("Free: " + item.free);
-                    Console.WriteLine("AvailableWithoutBorrow: " + item.availableWithoutBorrow);
-                    Console.WriteLine("SpotBorrow: " + item.spotBorrow);
+                    var i = 0;
+                    var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
+                    MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
+                    var Market_Buy = MarketResult_Buy.result;
+                    askPrice = Market_Buy.ask ?? 0;
+                    buyPrice = ((askPrice * 100) -3)/100;
+                    decimal totalCoin = 0;
+
+                    // Buy Condition
+                    var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 100, false).Result;
+                    OrderResult OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
+                    var OrderID = OrderResult.result.id;
+
+                    var getApeBalance = api.GetBalancesAsync().Result;
+                    BalanceResult ApeBalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getApeBalance);
+                    var ApeBalanceList = ApeBalanceResult.result;
+
+                    foreach (var item in ApeBalanceList)
+                    {
+                        if (item.coin == "APE")
+                        {
+                            if (item.total < 1)
+                            {
+                                if (i == 500)
+                                {
+                                    var cancel = api.CancelOrderAsync(OrderID);
+                                    Console.WriteLine("已取消購買Order!");
+                                }
+                                Console.WriteLine("等待購買中..." + i);
+                                i++;
+                            }
+                            else if (item.total >= 1)
+                            {
+                                Console.WriteLine("Buy Price: " + buyPrice);
+                                Console.WriteLine("Buy Success!");
+                                Console.WriteLine("###########################################");
+                                isBought = true;
+                            }
+                            
+
+                        }
+                    }
                 }
+                #endregion
+                
+                #region Sell
+                sellPrice = ((buyPrice * 100) + 2) / 100;
+                Console.WriteLine("Sell Price: " + sellPrice);
+                while (isBought)
+                {
+                    // Sell Condition
+                    var getApeBalance = api.GetBalancesAsync().Result;
+                    BalanceResult ApeBalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getApeBalance);
+                    var ApeBalanceList = ApeBalanceResult.result;
+                    foreach (var item in ApeBalanceList)
+                    {
+                        if (item.coin == "APE")
+                        {
+                            if (item.total >= 1)
+                            {
+                                var rSell = api.PlaceOrderAsync(ins, SideType.sell, sellPrice, OrderType.limit, item.total ?? 0, false).Result;
+                                Console.WriteLine(rSell);
+                            }
+                            else if (item.total < 1)
+                            {
+                                Console.WriteLine("Sell Success!");
+                                Console.WriteLine("###########################################");
+                                isBought = false;
+                            }
+                        }
+                    }
+                }
+                #endregion
+
+                #region get Balance
+                var getBalance = api.GetBalancesAsync().Result;
+                BalanceResult BalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getBalance);
+                var BalanceList = BalanceResult.result;
+                foreach (var item in BalanceList)
+                {
+                    if (item.coin == "USD")
+                    {
+                        Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue + ", Total: " + item.total);
+                        Console.WriteLine("###########################################");
+                    }
+                }
+                #endregion
             }
-
-            // Buy Condition
-
-            var r20 = api.PlaceOrderAsync(ins, SideType.buy, 1000, OrderType.limit, 0.001m, false).Result;
-
-
-            //var r20_1 = api.PlaceStopOrderAsync(ins, SideType.buy, 1000, 0.001m, false).Result;
-
-
         }
         #endregion
 

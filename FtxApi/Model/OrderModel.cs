@@ -1,0 +1,40 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace FtxApi.Model
+{
+    public class OrderResult
+    {
+        public OrderResult()
+        {
+            result = new Order();
+        }
+
+        public bool success { get; set; }
+        public Order result { get; set; }
+    }
+
+    public class Order
+    {
+        public string id { get; set; }
+        public string clientId { get; set; }
+        public string market { get; set; }
+        public string type { get; set; }
+        public string side { get; set; }
+        public decimal? price { get; set; }
+		public decimal? size { get; set; }
+		public string status { get; set; }
+		public decimal? filledSize { get; set; }
+		public decimal? remainingSize { get; set; }
+		public bool reduceOnly { get; set; }
+		public string liquidation { get; set; }
+		public decimal? avgFillPrice { get; set; }
+		public bool postOnly { get; set; }
+		public bool ioc { get; set; }
+		public string createdAt { get; set; }
+		public string future { get; set; }
+    }
+}
