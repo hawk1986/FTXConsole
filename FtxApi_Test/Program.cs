@@ -161,10 +161,10 @@ namespace FtxApi_Test
                                 if (i == 25)
                                 {
                                     var cancel = api.CancelOrderAsync(OrderID);
-                                    Console.WriteLine("已取消購買Order!");
+                                    Console.WriteLine("Order canceled!");
                                     i = 1;
                                 }
-                                Console.WriteLine("等待購買中..." + i);
+                                Console.WriteLine("Waiting for buying..." + i);
                                 i++;
                             }
                             else if (item.total >= 1)
@@ -199,7 +199,7 @@ namespace FtxApi_Test
                                 bidPrice_sell = Market_Sell.bid ?? 0;
                                 var profit = ((bidPrice_sell * 100) - (buyPrice * 100));
                                 //sellPrice = ((buyPrice * 100) + 2) / 100;
-                                Console.WriteLine("等待販賣中...");
+                                Console.WriteLine("Waiting for selling...");
                                 Console.WriteLine("Profit: " + profit);
                                 if ((bidPrice_sell * 100) - (buyPrice * 100) > 2)
                                 {
