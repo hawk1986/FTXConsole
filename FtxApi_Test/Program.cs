@@ -114,10 +114,10 @@ namespace FtxApi_Test
 
             while (true)
             {
+                var i = 0;
                 #region Market Price (Buy)
                 while (!isBought)
                 {
-                    var i = 0;
                     var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
                     MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
                     var Market_Buy = MarketResult_Buy.result;
@@ -144,6 +144,7 @@ namespace FtxApi_Test
                                 {
                                     var cancel = api.CancelOrderAsync(OrderID);
                                     Console.WriteLine("已取消購買Order!");
+                                    i = 0;
                                 }
                                 Console.WriteLine("等待購買中..." + i);
                                 i++;
