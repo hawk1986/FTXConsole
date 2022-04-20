@@ -114,7 +114,7 @@ namespace FtxApi_Test
 
             while (true)
             {
-                var i = 0;
+                var i = 1;
                 #region Market Price (Buy)
                 while (!isBought)
                 {
@@ -123,6 +123,7 @@ namespace FtxApi_Test
                     var Market_Buy = MarketResult_Buy.result;
                     askPrice = Market_Buy.ask ?? 0;
                     buyPrice = ((askPrice * 100) -3)/100;
+                    
                     decimal totalCoin = 0;
 
                     // Buy Condition
@@ -140,11 +141,11 @@ namespace FtxApi_Test
                         {
                             if (item.total < 1)
                             {
-                                if (i == 500)
+                                if (i == 25)
                                 {
                                     var cancel = api.CancelOrderAsync(OrderID);
                                     Console.WriteLine("已取消購買Order!");
-                                    i = 0;
+                                    i = 1;
                                 }
                                 Console.WriteLine("等待購買中..." + i);
                                 i++;
