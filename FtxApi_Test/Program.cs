@@ -111,6 +111,8 @@ namespace FtxApi_Test
             decimal bidPrice = 0;
             decimal buyPrice = 0;
             decimal sellPrice = 0;
+            decimal bidPrice_sell = 0;
+            string OrderID = string.Empty;
 
             var getBalance = api.GetBalancesAsync().Result;
             BalanceResult BalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getBalance);
@@ -129,6 +131,7 @@ namespace FtxApi_Test
             while (true)
             {
                 var i = 1;
+
                 #region Market Price (Buy)
                 while (!isBought)
                 {
@@ -138,12 +141,11 @@ namespace FtxApi_Test
                     bidPrice = Market_Buy.bid ?? 0;
                     buyPrice = bidPrice;
                     
-                    decimal totalCoin = 0;
-
                     // Buy Condition
                     var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 100, false).Result;
                     OrderResult OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
-                    var OrderID = OrderResult.result.id;
+                    if(i == 1) { OrderID = OrderResult.result.id; }
+                    
 
                     var getApeBalance = api.GetBalancesAsync().Result;
                     BalanceResult ApeBalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getApeBalance);
@@ -175,12 +177,11 @@ namespace FtxApi_Test
                     }
                 }
                 #endregion
-                
+
                 #region Sell
-                sellPrice = ((buyPrice * 100) + 2) / 100;
-                Console.WriteLine("Sell Price: " + sellPrice);
                 while (isBought)
                 {
+                    Console.WriteLine("等待販賣中...");
                     // Sell Condition
                     var getApeBalance = api.GetBalancesAsync().Result;
                     BalanceResult ApeBalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getApeBalance);
@@ -191,8 +192,17 @@ namespace FtxApi_Test
                         {
                             if (item.total >= 1)
                             {
-                                var rSell = api.PlaceOrderAsync(ins, SideType.sell, sellPrice, OrderType.limit, item.total ?? 0, false).Result;
-                                Console.WriteLine(rSell);
+                                var sellMKPrice = api.GetSingleMarketsAsync(ins).Result;
+                                MarketResult MarketResult_Sell = JsonConvert.DeserializeObject<MarketResult>(sellMKPrice);
+                                var Market_Sell = MarketResult_Sell.result;
+                                bidPrice_sell = Market_Sell.bid ?? 0;
+                                //sellPrice = ((buyPrice * 100) + 2) / 100;
+                                if ((bidPrice_sell * 100) - (buyPrice * 100) > 2)
+                                {
+                                    var rSell = api.PlaceOrderAsync(ins, SideType.sell, bidPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
+                                    Console.WriteLine(rSell);
+                                    Console.WriteLine("Sell Price: " + sellPrice);
+                                }
                             }
                             else if (item.total < 1)
                             {
