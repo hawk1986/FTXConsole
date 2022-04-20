@@ -113,6 +113,7 @@ namespace FtxApi_Test
             decimal sellPrice = 0;
             decimal bidPrice_sell = 0;
             string OrderID = string.Empty;
+            decimal profit = 0;
             decimal totalProfit = 0;
 
             var getBalance = api.GetBalancesAsync().Result;
@@ -140,7 +141,7 @@ namespace FtxApi_Test
                     MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
                     var Market_Buy = MarketResult_Buy.result;
                     bidPrice = Market_Buy.bid ?? 0;
-                    buyPrice = bidPrice;
+                    buyPrice = ((bidPrice * 100) - 1) / 100;
                     
                     // Buy Condition
                     var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 100, false).Result;
@@ -197,17 +198,17 @@ namespace FtxApi_Test
                                 MarketResult MarketResult_Sell = JsonConvert.DeserializeObject<MarketResult>(sellMKPrice);
                                 var Market_Sell = MarketResult_Sell.result;
                                 bidPrice_sell = Market_Sell.bid ?? 0;
-                                var profit = ((bidPrice_sell * 100) - (buyPrice * 100));
+                                profit = ((bidPrice_sell * 100) - (buyPrice * 100));
                                 //sellPrice = ((buyPrice * 100) + 2) / 100;
                                 Console.WriteLine("Waiting for selling...");
                                 Console.WriteLine("Profit: " + profit);
-                                if ((bidPrice_sell * 100) - (buyPrice * 100) > 2)
+                                if ((bidPrice_sell * 100) - (buyPrice * 100) >= (15 / 10))
                                 {
                                     var rSell = api.PlaceOrderAsync(ins, SideType.sell, bidPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
                                     Console.WriteLine(rSell);
                                     Console.WriteLine("Sell Price: " + sellPrice);
                                 }
-                                else if ((bidPrice_sell * 100) - (buyPrice * 100) < -8)
+                                else if ((bidPrice_sell * 100) - (buyPrice * 100) < -15)
                                 {
                                     var rSell = api.PlaceOrderAsync(ins, SideType.sell, bidPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
                                     Console.WriteLine(rSell);
@@ -235,7 +236,7 @@ namespace FtxApi_Test
                     {
                         Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue + ", Total: " + item.total);
                         Console.WriteLine("Profit: " + (item.usdValue - usdValue));
-                        totalProfit = totalProfit + (item.usdValue ?? 0 - usdValue ?? 0);
+                        totalProfit = totalProfit + profit;
                         Console.WriteLine("Total Profit: " + totalProfit);
                         Console.WriteLine("###########################################");
                         usdValue = item.usdValue;
