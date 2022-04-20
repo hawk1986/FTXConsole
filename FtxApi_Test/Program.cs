@@ -112,6 +112,20 @@ namespace FtxApi_Test
             decimal buyPrice = 0;
             decimal sellPrice = 0;
 
+            var getBalance = api.GetBalancesAsync().Result;
+            BalanceResult BalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getBalance);
+            var BalanceList = BalanceResult.result;
+            decimal? usdValue = 0;
+            foreach (var item in BalanceList)
+            {
+                if (item.coin == "USD")
+                {
+                    usdValue = item.usdValue;
+                    Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue + ", Total: " + item.total);
+                    Console.WriteLine("###########################################");
+                }
+            }
+
             while (true)
             {
                 var i = 1;
@@ -157,8 +171,6 @@ namespace FtxApi_Test
                                 Console.WriteLine("###########################################");
                                 isBought = true;
                             }
-                            
-
                         }
                     }
                 }
@@ -194,15 +206,17 @@ namespace FtxApi_Test
                 #endregion
 
                 #region get Balance
-                var getBalance = api.GetBalancesAsync().Result;
-                BalanceResult BalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getBalance);
-                var BalanceList = BalanceResult.result;
-                foreach (var item in BalanceList)
+                var getBalance1 = api.GetBalancesAsync().Result;
+                BalanceResult BalanceResult1 = JsonConvert.DeserializeObject<BalanceResult>(getBalance1);
+                var BalanceList1 = BalanceResult1.result;
+                foreach (var item in BalanceList1)
                 {
                     if (item.coin == "USD")
                     {
                         Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue + ", Total: " + item.total);
+                        Console.WriteLine("Profit: " + (item.usdValue - usdValue));
                         Console.WriteLine("###########################################");
+                        usdValue = item.usdValue;
                     }
                 }
                 #endregion
