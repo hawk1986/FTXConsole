@@ -177,7 +177,7 @@ namespace FtxApi_Test
                 #endregion
                 
                 #region Sell
-                sellPrice = ((buyPrice * 100) + 2) / 100;
+                sellPrice = ((buyPrice * 100) + 5) / 100;
                 Console.WriteLine("Sell Price: " + sellPrice);
                 while (isBought)
                 {
