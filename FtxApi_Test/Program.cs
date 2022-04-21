@@ -168,7 +168,9 @@ namespace FtxApi_Test
                         {
                             if (item.total < 1)
                             {
-                                Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying..." +  + i);
+                                if (i ==1)
+                                    Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying..." +  + i);
+
                                 if (i == 25)
                                 {
                                     var cancel = api.CancelOrderAsync(OrderID);
@@ -218,12 +220,9 @@ namespace FtxApi_Test
                                         var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
                                         isSelling = true;
                                         Console.WriteLine(rSell);
+                                        Console.WriteLine("Sell Price: " + askPrice_sell);
+                                        Console.WriteLine("Waiting for selling...");
                                     }
-                                }
-                                else
-                                {
-                                    Console.WriteLine("Sell Price: " + askPrice_sell);
-                                    Console.WriteLine("Waiting for selling...");
                                 }
                             }
                             else if (item.total < 1)
