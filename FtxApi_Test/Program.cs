@@ -107,7 +107,8 @@ namespace FtxApi_Test
         private static async Task BuyAndSell(FtxRestApi api)
         {
             // your future
-            var ins = "APE/USD";
+            //var ins = "APE/USD";
+            var ins = "ETH/USD";
 
             #region declare
             bool isBought = false;
@@ -152,13 +153,13 @@ namespace FtxApi_Test
                     MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
                     var Market_Buy = MarketResult_Buy.result;
                     askPrice = Market_Buy.ask ?? 0;
-                    buyPrice = ((askPrice * 100) - 2) / 100;
-
+                    //buyPrice = ((askPrice * 100) - 2) / 100; //ape
+                    buyPrice = ((askPrice - 2)); // ETH
                     // Buy Condition
                     if (!isOrdering)
                     {
                         // Input amount coin you want to buy
-                        var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 100, false).Result;
+                        var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 1, false).Result;
                         buyingPrice = buyPrice;
                         isOrdering = true;
                         OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
@@ -171,7 +172,7 @@ namespace FtxApi_Test
 
                     foreach (var item in ApeBalanceList)
                     {
-                        if (item.coin == "APE")
+                        if (item.coin == "ETH")
                         {
                             if (item.total < 1)
                             {
@@ -209,7 +210,7 @@ namespace FtxApi_Test
                     var ApeBalanceList = ApeBalanceResult.result;
                     foreach (var item in ApeBalanceList)
                     {
-                        if (item.coin == "APE")
+                        if (item.coin == "ETH")
                         {
                             if (item.total >= 1)
                             {
@@ -219,9 +220,10 @@ namespace FtxApi_Test
                                     MarketResult MarketResult_Sell = JsonConvert.DeserializeObject<MarketResult>(sellMKPrice);
                                     var Market_Sell = MarketResult_Sell.result;
                                     askPrice_sell = Market_Sell.ask ?? 0;
-                                    profit = ((askPrice_sell * 100) - (buyPrice * 100));
-
-                                    if (profit >= 2 || profit < -20)
+                                    //profit = ((askPrice_sell * 100) - (buyPrice * 100)); // APE
+                                    profit = ((askPrice_sell) - (buyPrice));
+                                    //if (profit >= 2 || profit < -20) // APE
+                                    if (profit >= 1 || profit < -20)
                                     {
                                         var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
                                         isSelling = true;                                        
@@ -230,19 +232,19 @@ namespace FtxApi_Test
                                         Console.WriteLine("Sell Price: " + askPrice_sell);
                                         Console.WriteLine("Waiting for selling...");
                                     }
-                                    else if (i > 150)
-                                    {
-                                        if (profit < 2 || profit >= -20)
-                                        {
-                                            var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
-                                            Console.WriteLine(rSell);
-                                            Console.WriteLine("Profit: " + profit);
-                                            Console.WriteLine("Sell Price: " + askPrice_sell);
-                                            Console.WriteLine("Waiting for selling...");
-                                            i = 0;
-                                        }
-                                    }
-                                    i++;
+                                    //else if (i > 150)
+                                    //{
+                                    //    if (profit < 2 || profit >= -20)
+                                    //    {
+                                    //        var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
+                                    //        Console.WriteLine(rSell);
+                                    //        Console.WriteLine("Profit: " + profit);
+                                    //        Console.WriteLine("Sell Price: " + askPrice_sell);
+                                    //        Console.WriteLine("Waiting for selling...");
+                                    //        i = 0;
+                                    //    }
+                                    //}
+                                    //i++;
                                 }
                             }
                             else if (item.total < 1)
