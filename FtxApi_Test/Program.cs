@@ -120,6 +120,7 @@ namespace FtxApi_Test
             decimal profit = 0;
             decimal? sellProfit = 0;
             decimal? totalProfit = 0;
+            OrderResult OrderResult = new OrderResult();
             #endregion
 
             #region get first balance
@@ -160,7 +161,7 @@ namespace FtxApi_Test
                         var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 100, false).Result;
                         buyingPrice = buyPrice;
                         isOrdering = true;
-                        OrderResult OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
+                        OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
                         if (i == 1) { OrderID = OrderResult.result.id; }
                     }
 
@@ -192,6 +193,7 @@ namespace FtxApi_Test
                                 Console.WriteLine("Buy Success!");
                                 Console.WriteLine("###########################################");
                                 isBought = true;
+                                i = 1;
                             }
                         }
                     }
@@ -222,20 +224,35 @@ namespace FtxApi_Test
                                     if (profit >= 2 || profit < -20)
                                     {
                                         var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
-                                        isSelling = true;
+                                        isSelling = true;                                        
                                         Console.WriteLine(rSell);
                                         Console.WriteLine("Profit: " + profit);
                                         Console.WriteLine("Sell Price: " + askPrice_sell);
                                         Console.WriteLine("Waiting for selling...");
                                     }
+                                    else if (i > 150)
+                                    {
+                                        if (profit < 2 || profit >= -20)
+                                        {
+                                            var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
+                                            Console.WriteLine(rSell);
+                                            Console.WriteLine("Profit: " + profit);
+                                            Console.WriteLine("Sell Price: " + askPrice_sell);
+                                            Console.WriteLine("Waiting for selling...");
+                                            i = 0;
+                                        }
+                                    }
+                                    i++;
                                 }
                             }
                             else if (item.total < 1)
                             {
+                                OrderID = string.Empty;
                                 Console.WriteLine("Sell Success!");
                                 Console.WriteLine("###########################################");
                                 isSelling = false;
                                 isBought = false;
+                                i = 1;
                             }
                         }
                     }
