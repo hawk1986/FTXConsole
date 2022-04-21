@@ -120,6 +120,8 @@ namespace FtxApi_Test
             double? profit = 0;
             double? sellProfit = 0;
             double? totalProfit = 0;
+            double? firstBuyValue = 0;
+            int buyTimes = 0;
             OrderResult OrderResult = new OrderResult();
             #endregion
 
@@ -141,6 +143,7 @@ namespace FtxApi_Test
 
             while (true)
             {
+                buyTimes++;
                 var i = 1;
                 bool isOrdering = false;
              
@@ -187,6 +190,8 @@ namespace FtxApi_Test
                             }
                             else if (item.total >= 1)
                             {
+                                if (buyTimes == 1)
+                                    firstBuyValue = buyPrice;
                                 Console.WriteLine("Buy Price: " + buyPrice);
                                 Console.WriteLine("Buy Success!");
                                 Console.WriteLine("###########################################");
@@ -249,6 +254,7 @@ namespace FtxApi_Test
                 {
                     if (item.coin == "USD")
                     {
+                        Console.WriteLine("Round: " + buyTimes);
                         Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue + ", Total: " + item.total);
                         Console.WriteLine("Profit: " + (item.usdValue - usdValue));
                         sellProfit = item.usdValue - usdValue;
