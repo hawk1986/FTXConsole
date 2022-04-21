@@ -23,26 +23,26 @@ namespace FtxApi.Model
         public string name { get; set; }
         public bool enabled { get; set; }
         public bool postOnly { get; set; }
-        public decimal? priceIncrement { get; set; }
-        public decimal? sizeIncrement { get; set; }
-        public decimal? minProvideSize { get; set; }
-		public decimal? last { get; set; }
-		public decimal? bid { get; set; }
-		public decimal? ask { get; set; }
-		public decimal? price { get; set; }
+        public double? priceIncrement { get; set; }
+        public double? sizeIncrement { get; set; }
+        public double? minProvideSize { get; set; }
+		public double? last { get; set; }
+		public double? bid { get; set; }
+		public double? ask { get; set; }
+		public double? price { get; set; }
 		public string type { get; set; }
 		public string baseCurrency { get; set; }
 		public string quoteCurrency { get; set; }
 		public string underlying { get; set; }
 		public bool restricted { get; set; }
 		public bool highLeverageFeeExempt { get; set; }
-		public decimal? largeOrderThreshold { get; set; }
-		public decimal? change1h { get; set; }
-		public decimal? change24h { get; set; }
-		public decimal? changeBod { get; set; }
-		public decimal? quoteVolume24h { get; set; }
-		public decimal? volumeUsd24h { get; set; }
-        public decimal? priceHigh24h { get; set; }
-        public decimal? priceLow24h { get; set; }
+		public double? largeOrderThreshold { get; set; }
+		public double? change1h { get; set; }
+		public double? change24h { get; set; }
+		public double? changeBod { get; set; }
+		public double? quoteVolume24h { get; set; }
+		public double? volumeUsd24h { get; set; }
+        public double? priceHigh24h { get; set; }
+        public double? priceLow24h { get; set; }
     }
 }

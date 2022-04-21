@@ -63,7 +63,7 @@ namespace FtxApi_Test
             var r18 = api.GetWithdrawalHistoryAsync().Result;
             var r19 = api.RequestWithdrawalAsync("USDTBEAR", 20.2m, "0x83a127952d266A6eA306c40Ac62A4a70668FE3BE", "", "", "").Result;
             var r21 = api.GetOpenOrdersAsync(ins).Result;
-            var r20 = api.PlaceOrderAsync(ins, SideType.buy, 1000, OrderType.limit, 0.001m, false).Result;
+            var r20 = api.PlaceOrderAsync(ins, SideType.buy, 1000, OrderType.limit, 0.001, false).Result;
             var r20_1 = api.PlaceStopOrderAsync(ins, SideType.buy, 1000, 0.001m, false).Result;
             var r20_2 = api.PlaceTrailingStopOrderAsync(ins, SideType.buy, 0.05m, 0.001m, false).Result;
             var r20_3 = api.PlaceTakeProfitOrderAsync(ins, SideType.buy, 1000, 0.001m, false).Result;
@@ -112,15 +112,15 @@ namespace FtxApi_Test
 
             #region declare
             bool isBought = false;
-            decimal askPrice = 0;
-            decimal buyPrice = 0;
-            decimal buyingPrice = 0;
-            decimal sellPrice = 0;
-            decimal askPrice_sell = 0;
+            double? askPrice = 0;
+            double? buyPrice = 0;
+            double? buyingPrice = 0;
+            double? sellPrice = 0;
+            double? askPrice_sell = 0;
             string OrderID = string.Empty;
-            decimal profit = 0;
-            decimal? sellProfit = 0;
-            decimal? totalProfit = 0;
+            double? profit = 0;
+            double? sellProfit = 0;
+            double? totalProfit = 0;
             OrderResult OrderResult = new OrderResult();
             #endregion
 
@@ -128,7 +128,7 @@ namespace FtxApi_Test
             var getBalance = api.GetBalancesAsync().Result;
             BalanceResult BalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getBalance);
             var BalanceList = BalanceResult.result;
-            decimal? usdValue = 0;
+            double? usdValue = 0;
             foreach (var item in BalanceList)
             {
                 if (item.coin == "USD")
@@ -145,6 +145,7 @@ namespace FtxApi_Test
                 var i = 1;
                 bool isOrdering = false;
                 bool isSelling = false;
+                double itemMinTotal = 0.5;
 
                 #region Buy
                 while (!isBought)
@@ -154,12 +155,12 @@ namespace FtxApi_Test
                     var Market_Buy = MarketResult_Buy.result;
                     askPrice = Market_Buy.ask ?? 0;
                     //buyPrice = ((askPrice * 100) - 2) / 100; //ape
-                    buyPrice = ((askPrice - 2)); // ETH
+                    buyPrice = ((askPrice - 1)); // ETH
                     // Buy Condition
                     if (!isOrdering)
                     {
                         // Input amount coin you want to buy
-                        var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 1, false).Result;
+                        var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, 1, false).Result;
                         buyingPrice = buyPrice;
                         isOrdering = true;
                         OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
@@ -174,7 +175,7 @@ namespace FtxApi_Test
                     {
                         if (item.coin == "ETH")
                         {
-                            if (item.total < 1)
+                            if (item.total < itemMinTotal)
                             {
                                 if (i ==1)
                                     Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying...");
@@ -188,7 +189,7 @@ namespace FtxApi_Test
                                 }
                                 i++;
                             }
-                            else if (item.total >= 1)
+                            else if (item.total >= itemMinTotal)
                             {
                                 Console.WriteLine("Buy Price: " + buyPrice);
                                 Console.WriteLine("Buy Success!");
@@ -212,26 +213,29 @@ namespace FtxApi_Test
                     {
                         if (item.coin == "ETH")
                         {
-                            if (item.total >= 1)
+                            //if (item.total >= 1) //APE
+                            if (item.total >= itemMinTotal) // ETH
                             {
                                 if (!isSelling)
                                 {
                                     var sellMKPrice = api.GetSingleMarketsAsync(ins).Result;
                                     MarketResult MarketResult_Sell = JsonConvert.DeserializeObject<MarketResult>(sellMKPrice);
                                     var Market_Sell = MarketResult_Sell.result;
-                                    askPrice_sell = Market_Sell.ask ?? 0;
+                                    //askPrice_sell = Market_Sell.ask ?? 0;
+                                    askPrice_sell = askPrice + 1;
                                     //profit = ((askPrice_sell * 100) - (buyPrice * 100)); // APE
                                     profit = ((askPrice_sell) - (buyPrice));
                                     //if (profit >= 2 || profit < -20) // APE
-                                    if (profit >= 1 || profit < -20)
-                                    {
-                                        var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
+                                    //if (profit >= 1 || profit < -20)
+                                    //{
+                                        var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell ?? 0, OrderType.limit, item.total ?? 0, false).Result;
                                         isSelling = true;                                        
                                         Console.WriteLine(rSell);
                                         Console.WriteLine("Profit: " + profit);
                                         Console.WriteLine("Sell Price: " + askPrice_sell);
                                         Console.WriteLine("Waiting for selling...");
-                                    }
+                                    //}
+
                                     //else if (i > 150)
                                     //{
                                     //    if (profit < 2 || profit >= -20)
@@ -247,7 +251,8 @@ namespace FtxApi_Test
                                     //i++;
                                 }
                             }
-                            else if (item.total < 1)
+                            //else if (item.total < 1) //APE
+                            else if (item.total < itemMinTotal) // ETH
                             {
                                 OrderID = string.Empty;
                                 Console.WriteLine("Sell Success!");

@@ -252,7 +252,7 @@ namespace FtxApi
 
         #region Orders
 
-        public async Task<dynamic> PlaceOrderAsync(string instrument, SideType side, decimal price, OrderType orderType, decimal amount, bool reduceOnly = false)
+        public async Task<dynamic> PlaceOrderAsync(string instrument, SideType side, double price, OrderType orderType, double amount, bool reduceOnly = false)
         {
             var path = $"api/orders";
 
