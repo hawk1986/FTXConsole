@@ -151,6 +151,7 @@ namespace FtxApi_Test
                     // Buy Condition
                     if (!isOrdering)
                     {
+                        // Input amount coin you want to buy
                         var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 100, false).Result;
                         buyingPrice = buyPrice;
                         isOrdering = true;
@@ -169,7 +170,7 @@ namespace FtxApi_Test
                             if (item.total < 1)
                             {
                                 if (i ==1)
-                                    Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying..." +  + i);
+                                    Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying...");
 
                                 if (i == 25)
                                 {
@@ -212,14 +213,13 @@ namespace FtxApi_Test
                                     var Market_Sell = MarketResult_Sell.result;
                                     askPrice_sell = Market_Sell.ask ?? 0;
                                     profit = ((askPrice_sell * 100) - (buyPrice * 100));
-                                    //sellPrice = ((buyPrice * 100) + 2) / 100;
-                                    Console.WriteLine("Profit: " + profit);
 
                                     if (profit >= 2 || profit < -20)
                                     {
                                         var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
                                         isSelling = true;
                                         Console.WriteLine(rSell);
+                                        Console.WriteLine("Profit: " + profit);
                                         Console.WriteLine("Sell Price: " + askPrice_sell);
                                         Console.WriteLine("Waiting for selling...");
                                     }
