@@ -106,9 +106,11 @@ namespace FtxApi_Test
         #region BuyAndSell
         private static async Task BuyAndSell(FtxRestApi api)
         {
+            // your future
             var ins = "APE/USD";
+
+            #region declare
             bool isBought = false;
-            
             decimal askPrice = 0;
             decimal buyPrice = 0;
             decimal buyingPrice = 0;
@@ -118,7 +120,9 @@ namespace FtxApi_Test
             decimal profit = 0;
             decimal? sellProfit = 0;
             decimal? totalProfit = 0;
+            #endregion
 
+            #region get first balance
             var getBalance = api.GetBalancesAsync().Result;
             BalanceResult BalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getBalance);
             var BalanceList = BalanceResult.result;
@@ -132,6 +136,7 @@ namespace FtxApi_Test
                     Console.WriteLine("###########################################");
                 }
             }
+            #endregion
 
             while (true)
             {
@@ -139,7 +144,7 @@ namespace FtxApi_Test
                 bool isOrdering = false;
                 bool isSelling = false;
 
-                #region Market Price (Buy)
+                #region Buy
                 while (!isBought)
                 {
                     var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
