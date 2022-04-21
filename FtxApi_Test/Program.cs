@@ -116,8 +116,8 @@ namespace FtxApi_Test
             decimal askPrice_sell = 0;
             string OrderID = string.Empty;
             decimal profit = 0;
-            decimal sellProfit = 0;
-            decimal totalProfit = 0;
+            decimal? sellProfit = 0;
+            decimal? totalProfit = 0;
 
             var getBalance = api.GetBalancesAsync().Result;
             BalanceResult BalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getBalance);
@@ -213,7 +213,7 @@ namespace FtxApi_Test
                                     askPrice_sell = Market_Sell.ask ?? 0;
                                     profit = ((askPrice_sell * 100) - (buyPrice * 100));
                                     //sellPrice = ((buyPrice * 100) + 2) / 100;
-                                    Console.WriteLine("Profit: " + profit + ", waiting for selling...");
+                                    Console.WriteLine("Profit: " + profit);
 
                                     if (profit >= 2 || profit < -20)
                                     {
@@ -247,7 +247,8 @@ namespace FtxApi_Test
                     {
                         Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue + ", Total: " + item.total);
                         Console.WriteLine("Profit: " + (item.usdValue - usdValue));
-                        totalProfit = totalProfit + (item.usdValue ?? 0 - usdValue ?? 0);
+                        sellProfit = item.usdValue - usdValue;
+                        totalProfit = totalProfit + sellProfit;
                         Console.WriteLine("Total Profit: " + totalProfit);
                         Console.WriteLine("###########################################");
                         usdValue = item.usdValue;
