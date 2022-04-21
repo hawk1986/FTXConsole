@@ -115,7 +115,6 @@ namespace FtxApi_Test
             double? askPrice = 0;
             double? buyPrice = 0;
             double? buyingPrice = 0;
-            double? sellPrice = 0;
             double? askPrice_sell = 0;
             string OrderID = string.Empty;
             double? profit = 0;
@@ -144,9 +143,7 @@ namespace FtxApi_Test
             {
                 var i = 1;
                 bool isOrdering = false;
-                bool isSelling = false;
-                double itemMinTotal = 0.5;
-
+             
                 #region Buy
                 while (!isBought)
                 {
@@ -155,7 +152,7 @@ namespace FtxApi_Test
                     var Market_Buy = MarketResult_Buy.result;
                     askPrice = Market_Buy.ask ?? 0;
                     buyPrice = (askPrice  - 0.02); //APE
-                    //buyPrice = ((askPrice - 1)); // ETH
+                    
                     // Buy Condition
                     if (!isOrdering)
                     {
@@ -175,12 +172,11 @@ namespace FtxApi_Test
                     {
                         if (item.coin == "APE")
                         {
-                            if (item.total < itemMinTotal)
+                            if (item.total < 1)
                             {
                                 if (i ==1)
                                     Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying...");
-
-                                if (i == 25)
+                                else if (i == 25)
                                 {
                                     var cancel = api.CancelOrderAsync(OrderID);
                                     isOrdering = false;
@@ -189,7 +185,7 @@ namespace FtxApi_Test
                                 }
                                 i++;
                             }
-                            else if (item.total >= itemMinTotal)
+                            else if (item.total >= 1)
                             {
                                 Console.WriteLine("Buy Price: " + buyPrice);
                                 Console.WriteLine("Buy Success!");
@@ -203,6 +199,7 @@ namespace FtxApi_Test
                 #endregion
 
                 #region Sell
+                bool isSelling = false;
                 while (isBought)
                 {
                     // Sell Condition
@@ -213,53 +210,31 @@ namespace FtxApi_Test
                     {
                         if (item.coin == "APE")
                         {
-                            //if (item.total >= itemMinTotal) // ETH
-                            if (item.total >= 1) //APE
+                            if (item.total >= 1) 
                             {
                                 if (!isSelling)
                                 {
-                                    var sellMKPrice = api.GetSingleMarketsAsync(ins).Result;
-                                    MarketResult MarketResult_Sell = JsonConvert.DeserializeObject<MarketResult>(sellMKPrice);
-                                    var Market_Sell = MarketResult_Sell.result;
+                                    //var sellMKPrice = api.GetSingleMarketsAsync(ins).Result;
+                                    //MarketResult MarketResult_Sell = JsonConvert.DeserializeObject<MarketResult>(sellMKPrice);
+                                    //var Market_Sell = MarketResult_Sell.result;
                                     //askPrice_sell = Market_Sell.ask ?? 0;
                                     askPrice_sell = askPrice + 0.01;
-                                    //profit = ((askPrice_sell * 100) - (buyPrice * 100)); // APE
                                     profit = ((askPrice_sell) - (buyPrice));
-                                    if (profit >= 0.02 || profit < -0.2) // APE
-                                                                     //if (profit >= 1 || profit < -20)
-                                    {
-                                        var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell ?? 0, OrderType.limit, item.total ?? 0, false).Result;
-                                        isSelling = true;
-                                        Console.WriteLine(rSell);
-                                        Console.WriteLine("Profit: " + profit);
-                                        Console.WriteLine("Sell Price: " + askPrice_sell);
-                                        Console.WriteLine("Waiting for selling...");
-                                    }
 
-                                //else if (i > 150)
-                                //{
-                                //    if (profit < 2 || profit >= -20)
-                                //    {
-                                //        var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
-                                //        Console.WriteLine(rSell);
-                                //        Console.WriteLine("Profit: " + profit);
-                                //        Console.WriteLine("Sell Price: " + askPrice_sell);
-                                //        Console.WriteLine("Waiting for selling...");
-                                //        i = 0;
-                                //    }
-                                //}
-                                //i++;
+                                    var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell ?? 0, OrderType.limit, item.total ?? 0, false).Result;
+                                    isSelling = true;
+                                    Console.WriteLine(rSell);
+                                    Console.WriteLine("Profit: " + profit);
+                                    Console.WriteLine("Sell Price: " + askPrice_sell);
+                                    Console.WriteLine("Waiting for selling...");
+                                }
                             }
-                            }
-                            else if (item.total < 1) //APE
-                            //else if (item.total < itemMinTotal) // ETH
-                            {
-                                OrderID = string.Empty;
+                            else if (item.total < 1)
+                            { 
                                 Console.WriteLine("Sell Success!");
                                 Console.WriteLine("###########################################");
                                 isSelling = false;
                                 isBought = false;
-                                i = 1;
                             }
                         }
                     }
