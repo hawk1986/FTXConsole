@@ -108,8 +108,10 @@ namespace FtxApi_Test
         {
             var ins = "APE/USD";
             bool isBought = false;
+            
             decimal bidPrice = 0;
             decimal buyPrice = 0;
+            decimal buyingPrice = 0;
             decimal sellPrice = 0;
             decimal askPrice_sell = 0;
             string OrderID = string.Empty;
@@ -133,6 +135,7 @@ namespace FtxApi_Test
             while (true)
             {
                 var i = 1;
+                bool isOrdering = false;
 
                 #region Market Price (Buy)
                 while (!isBought)
@@ -140,14 +143,18 @@ namespace FtxApi_Test
                     var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
                     MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
                     var Market_Buy = MarketResult_Buy.result;
-                    bidPrice = Market_Buy.ask ?? 0;
-                    buyPrice = ((bidPrice * 100) - 1) / 100;
-                    
+                    bidPrice = Market_Buy.bid ?? 0;
+                    buyPrice = ((bidPrice * 100) - 2 ) / 100;
+
                     // Buy Condition
-                    var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 10, false).Result;
-                    OrderResult OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
-                    if(i == 1) { OrderID = OrderResult.result.id; }
-                    
+                    if (!isOrdering)
+                    {
+                        var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice, OrderType.limit, 10, false).Result;
+                        buyingPrice = buyPrice;
+                        isOrdering = true;
+                        OrderResult OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
+                        if (i == 1) { OrderID = OrderResult.result.id; }
+                    }
 
                     var getApeBalance = api.GetBalancesAsync().Result;
                     BalanceResult ApeBalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getApeBalance);
@@ -159,13 +166,14 @@ namespace FtxApi_Test
                         {
                             if (item.total < 1)
                             {
+                                Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying..." +  + i);
                                 if (i == 25)
                                 {
                                     var cancel = api.CancelOrderAsync(OrderID);
+                                    isOrdering = false;
                                     Console.WriteLine("Order canceled!");
-                                    i = 1;
+                                    i = 0;
                                 }
-                                Console.WriteLine("Waiting for buying..." + i);
                                 i++;
                             }
                             else if (item.total >= 1)
@@ -183,7 +191,6 @@ namespace FtxApi_Test
                 #region Sell
                 while (isBought)
                 {
-                    
                     // Sell Condition
                     var getApeBalance = api.GetBalancesAsync().Result;
                     BalanceResult ApeBalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getApeBalance);
@@ -197,18 +204,18 @@ namespace FtxApi_Test
                                 var sellMKPrice = api.GetSingleMarketsAsync(ins).Result;
                                 MarketResult MarketResult_Sell = JsonConvert.DeserializeObject<MarketResult>(sellMKPrice);
                                 var Market_Sell = MarketResult_Sell.result;
-                                askPrice_sell = Market_Sell.ask ?? 0;
+                                askPrice_sell = Market_Sell.bid ?? 0;
                                 profit = ((askPrice_sell * 100) - (buyPrice * 100));
                                 //sellPrice = ((buyPrice * 100) + 2) / 100;
-                                Console.WriteLine("Waiting for selling...");
-                                Console.WriteLine("Profit: " + profit);
+                                Console.WriteLine("Profit: " + profit + ", waiting for selling...");
+
                                 if (profit >= 2)
                                 {
                                     var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
                                     Console.WriteLine(rSell);
                                     Console.WriteLine("Sell Price: " + sellPrice);
                                 }
-                                else if (profit < -25)
+                                else if (profit < -20)
                                 {
                                     var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
                                     Console.WriteLine(rSell);
