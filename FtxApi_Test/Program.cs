@@ -30,11 +30,13 @@ namespace FtxApi_Test
                 BuyAndSell(api).Wait();
             }
 
-
             //RestTests(api).Wait();
-            //WebSocketTests(wsApi, client).Wait();
 
+            //WebSocketTests(wsApi, client).Wait();
             Console.ReadLine();
+            
+
+
         }
 
         #region RestTests
@@ -65,6 +67,7 @@ namespace FtxApi_Test
             var r18 = api.GetWithdrawalHistoryAsync().Result;
             var r19 = api.RequestWithdrawalAsync("USDTBEAR", 20.2m, "0x83a127952d266A6eA306c40Ac62A4a70668FE3BE", "", "", "").Result;
             var r21 = api.GetOpenOrdersAsync(ins).Result;
+            Console.WriteLine(r21);
             var r20 = api.PlaceOrderAsync(ins, SideType.buy, 1000, OrderType.limit, 0.001, false).Result;
             var r20_1 = api.PlaceStopOrderAsync(ins, SideType.buy, 1000, 0.001m, false).Result;
             var r20_2 = api.PlaceTrailingStopOrderAsync(ins, SideType.buy, 0.05m, 0.001m, false).Result;
@@ -93,12 +96,14 @@ namespace FtxApi_Test
             
             wsApi.OnWebSocketConnect += () =>
             {
-                wsApi.SendCommand(FtxWebSockerRequestGenerator.GetAuthRequest(client));
-                //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("orderbook", ins));
+                //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetAuthRequest(client));
+                wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("orderbook", ins));
                 //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("trades", ins));
-                wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("ticker", ins));
+                //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("ticker", ins));
                 //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("fills"));
                 //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("orders"));
+
+                
             };
 
             await wsApi.Connect();
@@ -133,7 +138,33 @@ namespace FtxApi_Test
             double? totalProfit = 0;
             int buyTimes = 0;
             OrderResult OrderResult = new OrderResult();
+            // buy param
+            var i = 1;
+            bool isOrdering = false;
+            bool isBought = false;
+            // sell param
+            bool isSelling = false;
+            bool alreadySelling = false;
             #endregion
+
+            // if error, check orders...
+            var checkOrders = api.GetOpenOrdersAsync(ins).Result;
+            OrderStatus orderStatus = JsonConvert.DeserializeObject<OrderStatus>(checkOrders);
+            var status = orderStatus.result;
+            foreach (var item in status)
+            {
+                if (item.market == "APE/USD" && item.side == "buy")
+                {
+                    var cancel = api.CancelOrderAsync(item.id);
+                }
+                else if (item.market == "APE/USD" && item.side == "sell")
+                {
+                    askPrice_sell = item.price;
+                    isBought = true;
+                    isSelling = true;
+                    alreadySelling = true;
+                }
+            }
 
             while (true)
             {
@@ -149,6 +180,7 @@ namespace FtxApi_Test
                     {
                         Console.WriteLine("Round: " + buyTimes);
                         Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue);
+                        firstBalance = firstBalance == 0 ? item.usdValue : firstBalance;
                         Console.WriteLine("Profit: " + (item.usdValue - firstBalance));
                         sellProfit = item.usdValue - firstBalance;
                         totalProfit = totalProfit + sellProfit;
@@ -160,9 +192,6 @@ namespace FtxApi_Test
                 #endregion
 
                 #region Buy
-                var i = 1;
-                bool isOrdering = false;
-                bool isBought = false;
                 while (!isBought)
                 {
                     #region Get price 10 times
@@ -288,8 +317,7 @@ namespace FtxApi_Test
                 }
                 #endregion
 
-                #region Sell
-                bool isSelling = false;
+                #region Sell                
                 while (isBought)
                 {
                     // Sell Condition
@@ -314,9 +342,14 @@ namespace FtxApi_Test
                                     var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell ?? 0, OrderType.limit, item.total ?? 0, false).Result;
                                     isSelling = true;
                                     Console.WriteLine(rSell);
-                                    Console.WriteLine("Profit: " + profit);
                                     Console.WriteLine("Sell Price: " + askPrice_sell);
                                     Console.WriteLine("Waiting for selling...");
+                                }
+                                else if (isSelling && alreadySelling)
+                                {
+                                    Console.WriteLine("Sell Price: " + askPrice_sell);
+                                    Console.WriteLine("Waiting for selling...");
+                                    alreadySelling = false;
                                 }
                             }
                             else if (item.total < 1)

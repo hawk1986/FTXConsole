@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using SuperSocket.ClientEngine;
@@ -25,7 +26,7 @@ namespace FtxApi
             OnWebSocketConnect?.Invoke();
         }
 
-        protected async Task<WebSocket> CreateWebSocket(string url)
+        protected async Task<WebSocket> CreateWebSocket(string url) 
         {
             var webSocket = new WebSocket(url);
 
