@@ -21,10 +21,12 @@ namespace FtxApi_Test
             {
                 BuyAndSell(api).Wait();
             }
-            catch (Exception ex) { 
-            
+            catch (Exception ex)
+            {
+
             }
-            finally {
+            finally
+            {
                 BuyAndSell(api).Wait();
             }
 
@@ -92,9 +94,9 @@ namespace FtxApi_Test
             wsApi.OnWebSocketConnect += () =>
             {
                 wsApi.SendCommand(FtxWebSockerRequestGenerator.GetAuthRequest(client));
-                wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("orderbook", ins));
+                //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("orderbook", ins));
                 //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("trades", ins));
-                //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("ticker", ins));
+                wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("ticker", ins));
                 //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("fills"));
                 //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("orders"));
             };
@@ -109,9 +111,12 @@ namespace FtxApi_Test
             // your future
             var ins = "APE/USD";
 
-            #region declare
-            bool isBought = false;
+            #region declare            
+            double? firstBalance = 0;
             double? askPrice = 0;
+            double? askPrice1 = 0;
+            double? askPrice2 = 0;
+            double? askPrice3 = 0;
             double? buyPrice = 0;
             double? buyingPrice = 0;
             double? askPrice_sell = 0;
@@ -119,62 +124,75 @@ namespace FtxApi_Test
             double? profit = 0;
             double? sellProfit = 0;
             double? totalProfit = 0;
-            double? firstBuyValue = 0;
-            double? secondBuyValue = 0;
-            double? thirdBuyValue = 0;
             int buyTimes = 0;
             OrderResult OrderResult = new OrderResult();
-            #endregion
-
-            #region get first balance
-            var getBalance = api.GetBalancesAsync().Result;
-            BalanceResult BalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getBalance);
-            var BalanceList = BalanceResult.result;
-            double? usdValue = 0;
-            foreach (var item in BalanceList)
-            {
-                if (item.coin == "USD")
-                {
-                    usdValue = item.usdValue;
-                    Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue + ", Total: " + item.total);
-                    Console.WriteLine("###########################################");
-                }
-            }
             #endregion
 
             while (true)
             {
                 buyTimes++;
+
+                #region get Balance
+                var getBalance1 = api.GetBalancesAsync().Result;
+                BalanceResult BalanceResult1 = JsonConvert.DeserializeObject<BalanceResult>(getBalance1);
+                var BalanceList1 = BalanceResult1.result;
+                foreach (var item in BalanceList1)
+                {
+                    if (item.coin == "USD")
+                    {
+                        Console.WriteLine("Round: " + buyTimes);
+                        Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue);
+                        Console.WriteLine("Profit: " + (item.usdValue - firstBalance));
+                        sellProfit = item.usdValue - firstBalance;
+                        totalProfit = totalProfit + sellProfit;
+                        Console.WriteLine("Total Profit: " + totalProfit);
+                        Console.WriteLine("###########################################");
+                        firstBalance = item.usdValue;
+                    }
+                }
+                #endregion
+
+                #region Buy
                 var i = 1;
                 bool isOrdering = false;
-             
-                #region Buy
+                bool isBought = false;
                 while (!isBought)
                 {
-                    var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
-                    MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
-                    var Market_Buy = MarketResult_Buy.result;
-                    askPrice = Market_Buy.ask ?? 0;
-                    buyPrice = (askPrice  - 0.02);
+                    #region Get price 3 times
+                    // Get first price
+                    var buyMKPrice1 = api.GetSingleMarketsAsync(ins).Result;
+                    MarketResult MarketResult_Buy1 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice1);
+                    var Market_Buy1 = MarketResult_Buy1.result;
+                    askPrice1 = Market_Buy1.ask ?? 0;
+                    // Get second price
+                    var buyMKPrice2 = api.GetSingleMarketsAsync(ins).Result;
+                    MarketResult MarketResult_Buy2 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice2);
+                    var Market_Buy2 = MarketResult_Buy2.result;
+                    askPrice2 = Market_Buy2.ask ?? 0;
+                    // Get third price
+                    var buyMKPrice3 = api.GetSingleMarketsAsync(ins).Result;
+                    MarketResult MarketResult_Buy3 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice3);
+                    var Market_Buy3 = MarketResult_Buy3.result;
+                    askPrice3 = Market_Buy3.ask ?? 0;
+                    #endregion
 
-                    // if the buying price is too high, lower the price
-                    if (buyTimes == 1 && firstBuyValue > 0 && buyPrice - firstBuyValue > 0.1) // round 4, 7, 10,...
-                        buyPrice = buyPrice - 0.1;
-                    if (buyTimes == 2 && secondBuyValue > 0 && (buyPrice - secondBuyValue) > 0.1) // round 5, 8, 11,...
-                        buyPrice = buyPrice - 0.1;
-                    if (buyTimes == 3 && thirdBuyValue > 0 && (buyPrice - thirdBuyValue) > 0.1) // round 6, 9, 12,... 
-                        buyPrice = buyPrice - 0.1;
-
-                    // Buy Condition
-                    if (!isOrdering)
+                    #region Choose price condition
+                    // If  first price <= second price && first price <= third price => choose first price
+                    if (askPrice1 <= askPrice2 && askPrice1 <= askPrice3)
+                        askPrice = askPrice1;
+                    // If  first price >= second price && first price >= third price=> choose third price
+                    else if (askPrice1 >= askPrice2 && askPrice1 >= askPrice3)
+                        askPrice = askPrice3;
+                    else
                     {
-                        // Input amount coin you want to buy
-                        var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, 100, false).Result;
-                        buyingPrice = buyPrice;
-                        isOrdering = true;
-                        OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
-                        if (i == 1) { OrderID = OrderResult.result.id; }
+                        var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
+                        MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
+                        var Market_Buy = MarketResult_Buy.result;
+                        askPrice = Market_Buy.ask ?? 0;
                     }
+                    #endregion
+
+                    buyPrice = (askPrice  - 0.02);
 
                     var getApeBalance = api.GetBalancesAsync().Result;
                     BalanceResult ApeBalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getApeBalance);
@@ -186,6 +204,17 @@ namespace FtxApi_Test
                         {
                             if (item.total < 1)
                             {
+                                // Buy Condition
+                                if (!isOrdering)
+                                {
+                                    // Input amount coin you want to buy
+                                    var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, 100, false).Result;
+                                    buyingPrice = buyPrice;
+                                    isOrdering = true;
+                                    OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
+                                    if (i == 1) { OrderID = OrderResult.result.id; }
+                                }
+
                                 if (i == 1)
                                     Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying...");
                                 else if (i == 25)
@@ -199,17 +228,6 @@ namespace FtxApi_Test
                             }
                             else if (item.total >= 1)
                             {
-                                // Adjust the buying price
-                                if (buyTimes == 1)
-                                    firstBuyValue = buyPrice;
-                                if (buyTimes == 2)
-                                    secondBuyValue = buyPrice;
-                                if (buyTimes == 3)
-                                    thirdBuyValue = buyPrice;
-                                Console.WriteLine("Round: " + buyTimes);
-                                Console.WriteLine("firstBuyValue: " + firstBuyValue);
-                                Console.WriteLine("secondBuyValue: " + secondBuyValue);
-                                Console.WriteLine("thirdBuyValue: " + thirdBuyValue);
                                 Console.WriteLine("Buy Price: " + buyPrice);
                                 Console.WriteLine("Buy Success!");
                                 Console.WriteLine("###########################################");
@@ -263,30 +281,13 @@ namespace FtxApi_Test
                     }
                 }
                 #endregion
-
-                #region get Balance
-                var getBalance1 = api.GetBalancesAsync().Result;
-                BalanceResult BalanceResult1 = JsonConvert.DeserializeObject<BalanceResult>(getBalance1);
-                var BalanceList1 = BalanceResult1.result;
-                foreach (var item in BalanceList1)
-                {
-                    if (item.coin == "USD")
-                    {
-                        if (buyTimes == 3)
-                            buyTimes = 0;
-                        Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue + ", Total: " + item.total);
-                        Console.WriteLine("Profit: " + (item.usdValue - usdValue));
-                        sellProfit = item.usdValue - usdValue;
-                        totalProfit = totalProfit + sellProfit;
-                        Console.WriteLine("Total Profit: " + totalProfit);
-                        Console.WriteLine("###########################################");
-                        usdValue = item.usdValue;
-                    }
-                }
-                #endregion
+                
             }
         }
         #endregion
+
+        
+
 
     }
 }
