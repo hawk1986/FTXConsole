@@ -117,6 +117,13 @@ namespace FtxApi_Test
             double? askPrice1 = 0;
             double? askPrice2 = 0;
             double? askPrice3 = 0;
+            double? askPrice4 = 0;
+            double? askPrice5 = 0;
+            double? askPrice6 = 0;
+            double? askPrice7 = 0;
+            double? askPrice8 = 0;
+            double? askPrice9 = 0;
+            double? askPrice10 = 0;
             double? buyPrice = 0;
             double? buyingPrice = 0;
             double? askPrice_sell = 0;
@@ -158,7 +165,7 @@ namespace FtxApi_Test
                 bool isBought = false;
                 while (!isBought)
                 {
-                    #region Get price 3 times
+                    #region Get price 10 times
                     // Get first price
                     var buyMKPrice1 = api.GetSingleMarketsAsync(ins).Result;
                     MarketResult MarketResult_Buy1 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice1);
@@ -174,15 +181,50 @@ namespace FtxApi_Test
                     MarketResult MarketResult_Buy3 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice3);
                     var Market_Buy3 = MarketResult_Buy3.result;
                     askPrice3 = Market_Buy3.ask ?? 0;
+                    // Get fourth price
+                    var buyMKPrice4 = api.GetSingleMarketsAsync(ins).Result;
+                    MarketResult MarketResult_Buy4 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice4);
+                    var Market_Buy4 = MarketResult_Buy4.result;
+                    askPrice3 = Market_Buy4.ask ?? 0;
+                    // Get fifth price
+                    var buyMKPrice5 = api.GetSingleMarketsAsync(ins).Result;
+                    MarketResult MarketResult_Buy5 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice5);
+                    var Market_Buy5 = MarketResult_Buy5.result;
+                    askPrice5 = Market_Buy5.ask ?? 0;
+                    // Get sixth price
+                    var buyMKPrice6 = api.GetSingleMarketsAsync(ins).Result;
+                    MarketResult MarketResult_Buy6 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice6);
+                    var Market_Buy6 = MarketResult_Buy6.result;
+                    askPrice6 = Market_Buy3.ask ?? 0;
+                    // Get seventh price
+                    var buyMKPrice7 = api.GetSingleMarketsAsync(ins).Result;
+                    MarketResult MarketResult_Buy7 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice7);
+                    var Market_Buy7 = MarketResult_Buy7.result;
+                    askPrice7 = Market_Buy7.ask ?? 0;
+                    // Get eighth price
+                    var buyMKPrice8 = api.GetSingleMarketsAsync(ins).Result;
+                    MarketResult MarketResult_Buy8 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice8);
+                    var Market_Buy8 = MarketResult_Buy8.result;
+                    askPrice8 = Market_Buy8.ask ?? 0;
+                    // Get ninth price
+                    var buyMKPrice9 = api.GetSingleMarketsAsync(ins).Result;
+                    MarketResult MarketResult_Buy9 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice9);
+                    var Market_Buy9 = MarketResult_Buy9.result;
+                    askPrice9 = Market_Buy9.ask ?? 0;
+                    // Get tenth price
+                    var buyMKPrice10 = api.GetSingleMarketsAsync(ins).Result;
+                    MarketResult MarketResult_Buy10 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice10);
+                    var Market_Buy10 = MarketResult_Buy10.result;
+                    askPrice10 = Market_Buy10.ask ?? 0;
                     #endregion
 
                     #region Choose price condition
-                    // If  first price <= second price && first price <= third price => choose first price
-                    if (askPrice1 <= askPrice2 && askPrice1 <= askPrice3)
+                    // If  first price <= 9th price && first price <= 10th price => choose first price
+                    if (askPrice1 <= askPrice9 && askPrice1 <= askPrice10)
                         askPrice = askPrice1;
-                    // If  first price >= second price && first price >= third price=> choose third price
+                    // If  first price >= 9th price && first price >= 10th price=> choose 10th price
                     else if (askPrice1 >= askPrice2 && askPrice1 >= askPrice3)
-                        askPrice = askPrice3;
+                        askPrice = askPrice10;
                     else
                     {
                         var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
