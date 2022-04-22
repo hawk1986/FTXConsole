@@ -108,7 +108,6 @@ namespace FtxApi_Test
         {
             // your future
             var ins = "APE/USD";
-            //var ins = "ETH/USD";
 
             #region declare
             bool isBought = false;
@@ -121,6 +120,8 @@ namespace FtxApi_Test
             double? sellProfit = 0;
             double? totalProfit = 0;
             double? firstBuyValue = 0;
+            double? secondBuyValue = 0;
+            double? thirdBuyValue = 0;
             int buyTimes = 0;
             OrderResult OrderResult = new OrderResult();
             #endregion
@@ -154,8 +155,16 @@ namespace FtxApi_Test
                     MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
                     var Market_Buy = MarketResult_Buy.result;
                     askPrice = Market_Buy.ask ?? 0;
-                    buyPrice = (askPrice  - 0.02); //APE
-                    
+                    buyPrice = (askPrice  - 0.02);
+
+                    // if the buying price is too high, lower the price
+                    if (buyTimes == 1 && firstBuyValue > 0 && buyPrice - firstBuyValue > 0.1) // round 4, 7, 10,...
+                        buyPrice = buyPrice - 0.1;
+                    if (buyTimes == 2 && secondBuyValue > 0 && (buyPrice - secondBuyValue) > 0.1) // round 5, 8, 11,...
+                        buyPrice = buyPrice - 0.1;
+                    if (buyTimes == 3 && thirdBuyValue > 0 && (buyPrice - thirdBuyValue) > 0.1) // round 6, 9, 12,... 
+                        buyPrice = buyPrice - 0.1;
+
                     // Buy Condition
                     if (!isOrdering)
                     {
@@ -177,7 +186,7 @@ namespace FtxApi_Test
                         {
                             if (item.total < 1)
                             {
-                                if (i ==1)
+                                if (i == 1)
                                     Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying...");
                                 else if (i == 25)
                                 {
@@ -190,8 +199,17 @@ namespace FtxApi_Test
                             }
                             else if (item.total >= 1)
                             {
+                                // Adjust the buying price
                                 if (buyTimes == 1)
                                     firstBuyValue = buyPrice;
+                                if (buyTimes == 2)
+                                    secondBuyValue = buyPrice;
+                                if (buyTimes == 3)
+                                    thirdBuyValue = buyPrice;
+                                Console.WriteLine("Round: " + buyTimes);
+                                Console.WriteLine("firstBuyValue: " + firstBuyValue);
+                                Console.WriteLine("secondBuyValue: " + secondBuyValue);
+                                Console.WriteLine("thirdBuyValue: " + thirdBuyValue);
                                 Console.WriteLine("Buy Price: " + buyPrice);
                                 Console.WriteLine("Buy Success!");
                                 Console.WriteLine("###########################################");
@@ -254,7 +272,8 @@ namespace FtxApi_Test
                 {
                     if (item.coin == "USD")
                     {
-                        Console.WriteLine("Round: " + buyTimes);
+                        if (buyTimes == 3)
+                            buyTimes = 0;
                         Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue + ", Total: " + item.total);
                         Console.WriteLine("Profit: " + (item.usdValue - usdValue));
                         sellProfit = item.usdValue - usdValue;
