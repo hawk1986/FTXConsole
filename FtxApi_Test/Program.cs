@@ -222,8 +222,12 @@ namespace FtxApi_Test
                     // If  first price <= 9th price && first price <= 10th price => choose first price
                     if (askPrice1 <= askPrice9 && askPrice1 <= askPrice10)
                         askPrice = askPrice1;
+                    else if (askPrice1 - askPrice10 > 0.1)
+                    {
+                        continue;
+                    }
                     // If  first price >= 9th price && first price >= 10th price=> choose 10th price
-                    else if (askPrice1 >= askPrice2 && askPrice1 >= askPrice3)
+                    else if (askPrice1 >= askPrice9 && askPrice1 >= askPrice10)
                         askPrice = askPrice10;
                     else
                     {
@@ -249,12 +253,15 @@ namespace FtxApi_Test
                                 // Buy Condition
                                 if (!isOrdering)
                                 {
-                                    // Input amount coin you want to buy
-                                    var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, 100, false).Result;
-                                    buyingPrice = buyPrice;
-                                    isOrdering = true;
-                                    OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
-                                    if (i == 1) { OrderID = OrderResult.result.id; }
+                                    if (askPrice > 0)
+                                    {
+                                        // Input amount coin you want to buy
+                                        var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, 100, false).Result;
+                                        buyingPrice = buyPrice;
+                                        isOrdering = true;
+                                        OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
+                                        if (i == 1) { OrderID = OrderResult.result.id; }
+                                    }
                                 }
 
                                 if (i == 1)
