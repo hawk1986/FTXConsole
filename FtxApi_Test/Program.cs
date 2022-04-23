@@ -23,18 +23,16 @@ namespace FtxApi_Test
             }
             catch (Exception ex)
             {
+                Main();
 
-            }
-            finally
-            {
-                BuyAndSell(api).Wait();
+                System.Diagnostics.Process.GetCurrentProcess().Kill();
             }
 
             //RestTests(api).Wait();
 
             //WebSocketTests(wsApi, client).Wait();
             Console.ReadLine();
-            
+
 
 
         }
@@ -58,7 +56,7 @@ namespace FtxApi_Test
             var r9 = api.GetMarketOrderBookAsync(ins, 20).Result;
             var r10 = api.GetMarketTradesAsync(ins, 20, dateStart, dateEnd).Result;
             var r11 = api.GetAccountInfoAsync().Result;
-            var r12 = api.GetPositionsAsync().Result; 
+            var r12 = api.GetPositionsAsync().Result;
             var r13 = api.ChangeAccountLeverageAsync(20).Result;
             var r14 = api.GetCoinAsync().Result;
             var r15 = api.GetBalancesAsync().Result;
@@ -93,7 +91,7 @@ namespace FtxApi_Test
         private static async Task WebSocketTests(FtxWebSocketApi wsApi, Client client)
         {
             var ins = "APE/USD";
-            
+
             wsApi.OnWebSocketConnect += () =>
             {
                 //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetAuthRequest(client));
@@ -103,7 +101,7 @@ namespace FtxApi_Test
                 //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("fills"));
                 //wsApi.SendCommand(FtxWebSockerRequestGenerator.GetSubscribeRequest("orders"));
 
-                
+
             };
 
             await wsApi.Connect();
@@ -120,15 +118,8 @@ namespace FtxApi_Test
             double? firstBalance = 0;
             double? askPrice = 0;
             double? askPrice1 = 0;
-            double? askPrice2 = 0;
-            double? askPrice3 = 0;
-            double? askPrice4 = 0;
-            double? askPrice5 = 0;
-            double? askPrice6 = 0;
-            double? askPrice7 = 0;
-            double? askPrice8 = 0;
-            double? askPrice9 = 0;
             double? askPrice10 = 0;
+            double? askPrice20 = 0;
             double? buyPrice = 0;
             double? buyingPrice = 0;
             double? askPrice_sell = 0;
@@ -195,79 +186,39 @@ namespace FtxApi_Test
                 while (!isBought)
                 {
                     #region Get price 10 times
-                    // Get first price
-                    var buyMKPrice1 = api.GetSingleMarketsAsync(ins).Result;
-                    MarketResult MarketResult_Buy1 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice1);
-                    var Market_Buy1 = MarketResult_Buy1.result;
-                    askPrice1 = Market_Buy1.ask ?? 0;
-                    // Get second price
-                    var buyMKPrice2 = api.GetSingleMarketsAsync(ins).Result;
-                    MarketResult MarketResult_Buy2 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice2);
-                    var Market_Buy2 = MarketResult_Buy2.result;
-                    askPrice2 = Market_Buy2.ask ?? 0;
-                    // Get third price
-                    var buyMKPrice3 = api.GetSingleMarketsAsync(ins).Result;
-                    MarketResult MarketResult_Buy3 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice3);
-                    var Market_Buy3 = MarketResult_Buy3.result;
-                    askPrice3 = Market_Buy3.ask ?? 0;
-                    // Get fourth price
-                    var buyMKPrice4 = api.GetSingleMarketsAsync(ins).Result;
-                    MarketResult MarketResult_Buy4 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice4);
-                    var Market_Buy4 = MarketResult_Buy4.result;
-                    askPrice3 = Market_Buy4.ask ?? 0;
-                    // Get fifth price
-                    var buyMKPrice5 = api.GetSingleMarketsAsync(ins).Result;
-                    MarketResult MarketResult_Buy5 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice5);
-                    var Market_Buy5 = MarketResult_Buy5.result;
-                    askPrice5 = Market_Buy5.ask ?? 0;
-                    // Get sixth price
-                    var buyMKPrice6 = api.GetSingleMarketsAsync(ins).Result;
-                    MarketResult MarketResult_Buy6 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice6);
-                    var Market_Buy6 = MarketResult_Buy6.result;
-                    askPrice6 = Market_Buy3.ask ?? 0;
-                    // Get seventh price
-                    var buyMKPrice7 = api.GetSingleMarketsAsync(ins).Result;
-                    MarketResult MarketResult_Buy7 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice7);
-                    var Market_Buy7 = MarketResult_Buy7.result;
-                    askPrice7 = Market_Buy7.ask ?? 0;
-                    // Get eighth price
-                    var buyMKPrice8 = api.GetSingleMarketsAsync(ins).Result;
-                    MarketResult MarketResult_Buy8 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice8);
-                    var Market_Buy8 = MarketResult_Buy8.result;
-                    askPrice8 = Market_Buy8.ask ?? 0;
-                    // Get ninth price
-                    var buyMKPrice9 = api.GetSingleMarketsAsync(ins).Result;
-                    MarketResult MarketResult_Buy9 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice9);
-                    var Market_Buy9 = MarketResult_Buy9.result;
-                    askPrice9 = Market_Buy9.ask ?? 0;
-                    // Get tenth price
-                    var buyMKPrice10 = api.GetSingleMarketsAsync(ins).Result;
-                    MarketResult MarketResult_Buy10 = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice10);
-                    var Market_Buy10 = MarketResult_Buy10.result;
-                    askPrice10 = Market_Buy10.ask ?? 0;
+                    for (var x = 1; x <= 10; x++)
+                    {
+                        var _askPrice = await GetPrice(api, ins);
+                        if (x == 1)
+                            askPrice1 = _askPrice;
+                        if (x == 5)
+                            askPrice10 = _askPrice;
+                        if (x ==10)
+                            askPrice20 = _askPrice;
+                    }
                     #endregion
+                    //Console.WriteLine(askPrice1);
+                    //Console.WriteLine(askPrice10);
+                    //Console.WriteLine(askPrice20);
 
                     #region Choose price condition
-                    // If  first price <= 9th price && first price <= 10th price => choose first price
-                    if (askPrice1 <= askPrice9 && askPrice1 <= askPrice10)
+                    // If  first price <= 10th price && first price <= 20th price => choose first price
+                    if (askPrice1 <= askPrice10 && askPrice1 <= askPrice20)
                         askPrice = askPrice1;
-                    else if (askPrice1 - askPrice10 > 0.1)
+                    else if (askPrice1 - askPrice20 > 0.1)
                     {
                         continue;
                     }
-                    // If  first price >= 9th price && first price >= 10th price=> choose 10th price
-                    else if (askPrice1 >= askPrice9 && askPrice1 >= askPrice10)
-                        askPrice = askPrice10;
+                    // If  first price >= 10th price && first price >= 20th price=> choose 20th price
+                    else if (askPrice1 >= askPrice10 && askPrice1 >= askPrice20)
+                        askPrice = askPrice20;
                     else
                     {
-                        var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
-                        MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
-                        var Market_Buy = MarketResult_Buy.result;
-                        askPrice = Market_Buy.ask ?? 0;
+                        continue;
                     }
                     #endregion
 
-                    buyPrice = (askPrice  - 0.02);
+                    buyPrice = (askPrice - 0.1);
 
                     var getApeBalance = api.GetBalancesAsync().Result;
                     BalanceResult ApeBalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getApeBalance);
@@ -277,7 +228,7 @@ namespace FtxApi_Test
                     {
                         if (item.coin == "APE")
                         {
-                            if (item.total < 1)
+                            if (item.total < 50)
                             {
                                 // Buy Condition
                                 if (!isOrdering)
@@ -295,7 +246,7 @@ namespace FtxApi_Test
 
                                 if (i == 1)
                                     Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying...");
-                                else if (i == 25)
+                                else if (i == 40)
                                 {
                                     var cancel = api.CancelOrderAsync(OrderID);
                                     isOrdering = false;
@@ -304,9 +255,9 @@ namespace FtxApi_Test
                                 }
                                 i++;
                             }
-                            else if (item.total >= 1)
+                            else if (item.total >= 50)
                             {
-                                Console.WriteLine("Buy Price: " + buyPrice);
+                                Console.WriteLine("Buy Price: " + buyingPrice);
                                 Console.WriteLine("Buy Success!");
                                 Console.WriteLine("###########################################");
                                 isBought = true;
@@ -328,7 +279,7 @@ namespace FtxApi_Test
                     {
                         if (item.coin == "APE")
                         {
-                            if (item.total >= 1) 
+                            if (item.total >= 1)
                             {
                                 if (!isSelling)
                                 {
@@ -336,7 +287,7 @@ namespace FtxApi_Test
                                     //MarketResult MarketResult_Sell = JsonConvert.DeserializeObject<MarketResult>(sellMKPrice);
                                     //var Market_Sell = MarketResult_Sell.result;
                                     //askPrice_sell = Market_Sell.ask ?? 0;
-                                    askPrice_sell = askPrice + 0.01;
+                                    askPrice_sell = askPrice + 0.05;
                                     profit = ((askPrice_sell) - (buyPrice));
 
                                     var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell ?? 0, OrderType.limit, item.total ?? 0, false).Result;
@@ -353,23 +304,33 @@ namespace FtxApi_Test
                                 }
                             }
                             else if (item.total < 1)
-                            { 
+                            {
                                 Console.WriteLine("Sell Success!");
                                 Console.WriteLine("###########################################");
                                 isSelling = false;
                                 isBought = false;
+                                isOrdering = false;
                             }
                         }
                     }
                 }
                 #endregion
-                
+
             }
         }
         #endregion
 
-        
-
-
+        #region GetPrice
+        private static async Task<double> GetPrice(FtxRestApi api, string ins)
+        {
+            await Task.Delay(500);
+            double askprice = 0;
+            var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
+            MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
+            var Market_Buy = MarketResult_Buy.result;
+            askprice = Market_Buy.ask ?? 0;
+            return askprice; 
+        }
+        #endregion
     }
 }
