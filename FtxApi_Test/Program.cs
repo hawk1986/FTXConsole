@@ -25,7 +25,7 @@ namespace FtxApi_Test
             {
                 Main();
 
-                System.Diagnostics.Process.GetCurrentProcess().Kill();
+                //System.Diagnostics.Process.GetCurrentProcess().Kill();
             }
 
             //RestTests(api).Wait();
@@ -59,9 +59,12 @@ namespace FtxApi_Test
             OrderResult OrderResult = new OrderResult();
             // buy param
             var i = 1;
+            double _askPrice_buy = 0;
             bool isOrdering = false;
             bool isBought = false;
             // sell param
+            var j = 1;
+            double _askPrice_sell = 0;
             bool isSelling = false;
             bool alreadySelling = false;
             #endregion
@@ -115,39 +118,46 @@ namespace FtxApi_Test
                 while (!isBought)
                 {
                     #region Get price 10 times
-                    for (var x = 1; x <= 10; x++)
-                    {
-                        var _askPrice = await GetPrice(api, ins);
-                        if (x == 1)
-                            askPrice1 = _askPrice;
-                        if (x == 5)
-                            askPrice10 = _askPrice;
-                        if (x ==10)
-                            askPrice20 = _askPrice;
-                    }
+                    //if (!isOrdering)
+                    //{
+                    //    for (var x = 1; x <= 10; x++)
+                    //    {
+                    //        _askPrice = await GetPrice(api, ins);
+                    //        if (x == 1)
+                    //        {
+                    //            askPrice1 = _askPrice;
+                    //            Console.WriteLine(askPrice1);
+                    //        }
+                    //        if (x == 5)
+                    //        {
+                    //            askPrice10 = _askPrice;
+                    //            Console.WriteLine(askPrice10);
+                    //        }
+                    //        if (x == 10)
+                    //        {
+                    //            askPrice20 = _askPrice;
+                    //            Console.WriteLine(askPrice20);
+                    //        }
+                    //    }
+                    //}
                     #endregion
-                    //Console.WriteLine(askPrice1);
-                    //Console.WriteLine(askPrice10);
-                    //Console.WriteLine(askPrice20);
 
                     #region Choose price condition
-                    // If  first price <= 10th price && first price <= 20th price => choose first price
-                    if (askPrice1 <= askPrice10 && askPrice1 <= askPrice20)
-                        askPrice = askPrice1;
-                    else if (askPrice1 - askPrice20 > 0.1)
-                    {
-                        continue;
-                    }
-                    // If  first price >= 10th price && first price >= 20th price=> choose 20th price
-                    else if (askPrice1 >= askPrice10 && askPrice1 >= askPrice20)
-                        askPrice = askPrice20;
-                    else
-                    {
-                        continue;
-                    }
+                    //// If  first price <= 10th price && first price <= 20th price => choose first price
+                    //if (askPrice1 <= askPrice10 && askPrice1 <= askPrice20)
+                    //    askPrice = askPrice1;
+                    //else if (askPrice1 - askPrice20 > 0.1)
+                    //{
+                    //    continue;
+                    //}
+                    //// If  first price >= 10th price && first price >= 20th price=> choose 20th price
+                    //else if (askPrice1 >= askPrice10 && askPrice1 >= askPrice20)
+                    //    askPrice = askPrice20;
+                    //else
+                    //{
+                    //    continue;
+                    //}
                     #endregion
-
-                    buyPrice = (askPrice - 0.05);
 
                     var getApeBalance = api.GetBalancesAsync().Result;
                     BalanceResult ApeBalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getApeBalance);
@@ -162,10 +172,14 @@ namespace FtxApi_Test
                                 // Buy Condition
                                 if (!isOrdering)
                                 {
-                                    if (askPrice > 0)
+                                    _askPrice_buy = await GetPrice(api, ins);
+                                    if(_askPrice_buy <= 16.3)
+                                        buyPrice = (_askPrice_buy);
+
+                                    if (buyPrice > 0)
                                     {
                                         // Input amount coin you want to buy
-                                        var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, 100, false).Result;
+                                        var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, 150, false).Result;
                                         buyingPrice = buyPrice;
                                         isOrdering = true;
                                         OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
@@ -173,16 +187,16 @@ namespace FtxApi_Test
                                     }
                                 }
 
-                                if (i == 1)
-                                    Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying...");
-                                else if (i == 40)
-                                {
-                                    var cancel = api.CancelOrderAsync(OrderID);
-                                    isOrdering = false;
-                                    Console.WriteLine("Order canceled!");
-                                    i = 0;
-                                }
-                                i++;
+                                //if (i == 1)
+                                //    Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying...");
+                                //else if (i == 70)
+                                //{
+                                //    var cancel = api.CancelOrderAsync(OrderID);
+                                //    isOrdering = false;
+                                //    Console.WriteLine("Order canceled!");
+                                //    i = 0;
+                                //}
+                                //i++;
                             }
                             else if (item.total >= 50)
                             {
@@ -190,7 +204,7 @@ namespace FtxApi_Test
                                 Console.WriteLine("Buy Success!");
                                 Console.WriteLine("###########################################");
                                 isBought = true;
-                                i = 1;
+                                //i = 1;
                             }
                         }
                     }
@@ -212,25 +226,44 @@ namespace FtxApi_Test
                             {
                                 if (!isSelling)
                                 {
-                                    //var sellMKPrice = api.GetSingleMarketsAsync(ins).Result;
-                                    //MarketResult MarketResult_Sell = JsonConvert.DeserializeObject<MarketResult>(sellMKPrice);
-                                    //var Market_Sell = MarketResult_Sell.result;
-                                    //askPrice_sell = Market_Sell.ask ?? 0;
-                                    askPrice_sell = askPrice + 0.05;
-                                    profit = ((askPrice_sell) - (buyPrice));
-
-                                    var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell ?? 0, OrderType.limit, item.total ?? 0, false).Result;
-                                    isSelling = true;
-                                    Console.WriteLine(rSell);
-                                    Console.WriteLine("Sell Price: " + askPrice_sell);
-                                    Console.WriteLine("Waiting for selling...");
+                                    _askPrice_sell = await GetPrice(api, ins);
+                                    //askPrice_sell = buyPrice + 0.02;
+                                    //profit = ((askPrice_sell) - (buyPrice));
+                                    if (_askPrice_sell >= 16.8)
+                                    {
+                                        var rSell = api.PlaceOrderAsync(ins, SideType.sell, _askPrice_sell, OrderType.limit, item.total ?? 0, false).Result;
+                                        isSelling = true;
+                                        OrderResult = JsonConvert.DeserializeObject<OrderResult>(rSell);
+                                        if (j == 1) { OrderID = OrderResult.result.id; }
+                                        Console.WriteLine("Sell Price: " + askPrice_sell);
+                                        Console.WriteLine("Waiting for selling...");
+                                    }
                                 }
                                 else if (isSelling && alreadySelling)
                                 {
-                                    Console.WriteLine("Sell Price: " + askPrice_sell);
-                                    Console.WriteLine("Waiting for selling...");
+                                    Console.WriteLine("Selling price:" + askPrice_sell + ", waiting for selling...");
                                     alreadySelling = false;
                                 }
+
+                                // Lowewr the selling price
+                                //if (j == 1 && alreadySelling)
+                                //    Console.WriteLine("Selling price:" + askPrice_sell + ", waiting for selling...");
+                                //else if (j == 10000)
+                                //{
+                                //    var cancel = api.CancelOrderAsync(OrderID);
+                                //    Console.WriteLine("Order canceled!");
+                                //    _askPrice_sell = await GetPrice(api, ins);
+                                //    askPrice_sell = _askPrice_sell;
+
+                                //    await Task.Delay(1000);
+                                //    var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell ?? 0, OrderType.limit, item.total ?? 0, false).Result;
+                                //    isSelling = true;
+                                //    OrderResult = JsonConvert.DeserializeObject<OrderResult>(rSell);
+                                //    OrderID = OrderResult.result.id;
+                                //    Console.WriteLine("Selling price:" + askPrice_sell + ", waiting for selling...");
+                                //    j = 0;
+                                //}
+                                //j++;
                             }
                             else if (item.total < 1)
                             {
@@ -239,6 +272,7 @@ namespace FtxApi_Test
                                 isSelling = false;
                                 isBought = false;
                                 isOrdering = false;
+                                //j = 1;
                             }
                         }
                     }
@@ -249,10 +283,34 @@ namespace FtxApi_Test
         }
         #endregion
 
+        #region GetBalance (Not using)
+        private static async Task GetBalance(FtxRestApi api, double? firstBalance, int buyTimes, double? sellProfit, double? totalProfit)
+        {
+            var getBalance1 = api.GetBalancesAsync().Result;
+            BalanceResult BalanceResult1 = JsonConvert.DeserializeObject<BalanceResult>(getBalance1);
+            var BalanceList1 = BalanceResult1.result;
+            foreach (var item in BalanceList1)
+            {
+                if (item.coin == "USD")
+                {
+                    Console.WriteLine("Round: " + buyTimes);
+                    Console.WriteLine("Coin: " + item.coin + ", UsdValue: " + item.usdValue);
+                    firstBalance = firstBalance == 0 ? item.usdValue : firstBalance;
+                    Console.WriteLine("Profit: " + (item.usdValue - firstBalance));
+                    sellProfit = item.usdValue - firstBalance;
+                    totalProfit = totalProfit + sellProfit;
+                    Console.WriteLine("Total Profit: " + totalProfit);
+                    Console.WriteLine("###########################################");
+                    firstBalance = item.usdValue;
+                }
+            }
+        }
+        #endregion
+
         #region GetPrice
         private static async Task<double> GetPrice(FtxRestApi api, string ins)
         {
-            await Task.Delay(500);
+            await Task.Delay(1000);
             double askprice = 0;
             var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
             MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
