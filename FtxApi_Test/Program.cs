@@ -23,6 +23,29 @@ namespace FtxApi_Test
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
+
+                #region Cancel Orders
+                var ins = "APE/USD";
+                // if error, check orders...
+                var checkOrders = api.GetOpenOrdersAsync(ins).Result;
+                OrderStatus orderStatus = JsonConvert.DeserializeObject<OrderStatus>(checkOrders);
+                var status = orderStatus.result;
+                foreach (var item in status)
+                {
+                    if (item.market == "APE/USD" && item.side == "buy")
+                    {
+                        var cancel = api.CancelOrderAsync(item.id);
+                        Console.WriteLine("Order canceled!");
+                    }
+                    else if (item.market == "APE/USD" && item.side == "sell")
+                    {
+                        var cancel = api.CancelOrderAsync(item.id);
+                        Console.WriteLine("Order canceled!");
+                    }
+                }
+                #endregion
+
                 Main();
 
                 //System.Diagnostics.Process.GetCurrentProcess().Kill();
@@ -69,26 +92,6 @@ namespace FtxApi_Test
             bool alreadySelling = false;
             #endregion
 
-            // if error, check orders...
-            var checkOrders = api.GetOpenOrdersAsync(ins).Result;
-            OrderStatus orderStatus = JsonConvert.DeserializeObject<OrderStatus>(checkOrders);
-            var status = orderStatus.result;
-            foreach (var item in status)
-            {
-                if (item.market == "APE/USD" && item.side == "buy")
-                {
-                    var cancel = api.CancelOrderAsync(item.id);
-                    Console.WriteLine("Order canceled!");
-                }
-                else if (item.market == "APE/USD" && item.side == "sell")
-                {
-                    var cancel = api.CancelOrderAsync(item.id);
-                    Console.WriteLine("Order canceled!");
-                    isBought = false;
-                    isSelling = false;
-                }
-            }
-
             while (true)
             {
                 buyTimes++;
@@ -111,18 +114,18 @@ namespace FtxApi_Test
                         Console.WriteLine("###########################################");
                         firstBalance = item.usdValue;
                     }
-                    if (item.coin == "APE")
-                    {
-                        Console.WriteLine("Round: " + buyTimes);
-                        Console.WriteLine("Coin: " + item.coin + ", AvailableWithoutBorrow: " + item.availableWithoutBorrow);
-                        firstBalance = firstBalance == 0 ? item.availableWithoutBorrow : firstBalance;
-                        Console.WriteLine("Profit: " + (item.availableWithoutBorrow - firstBalance));
-                        sellProfit = item.availableWithoutBorrow - firstBalance;
-                        totalProfit = totalProfit + sellProfit;
-                        Console.WriteLine("Total Profit: " + totalProfit);
-                        Console.WriteLine("###########################################");
-                        firstBalance = item.usdValue;
-                    }
+                    //if (item.coin == "APE")
+                    //{
+                    //    Console.WriteLine("Round: " + buyTimes);
+                    //    Console.WriteLine("Coin: " + item.coin + ", AvailableWithoutBorrow: " + item.availableWithoutBorrow);
+                    //    firstBalance = firstBalance == 0 ? item.availableWithoutBorrow : firstBalance;
+                    //    Console.WriteLine("Profit: " + (item.availableWithoutBorrow - firstBalance));
+                    //    sellProfit = item.availableWithoutBorrow - firstBalance;
+                    //    totalProfit = totalProfit + sellProfit;
+                    //    Console.WriteLine("Total Profit: " + totalProfit);
+                    //    Console.WriteLine("###########################################");
+                    //    firstBalance = item.usdValue;
+                    //}
                 }
                 #endregion
 
@@ -179,13 +182,13 @@ namespace FtxApi_Test
                     {
                         if (item.coin == "APE")
                         {
-                            if (item.total < 5)
+                            if (item.availableWithoutBorrow < 5)
                             {
                                 // Buy Condition
                                 if (!isOrdering)
                                 {
                                     _askPrice_buy = await GetPrice(api, ins);
-                                    if (_askPrice_buy <= 15)
+                                    if (_askPrice_buy <= 16.28)
                                         buyPrice = (_askPrice_buy);
 
                                     // check if enough balance
@@ -194,29 +197,31 @@ namespace FtxApi_Test
                                     if (buyPrice > 0)
                                     {
                                         // Input amount coin you want to buy
-                                        if (canBuy > 10)
+                                        if (canBuy > 1)
                                         {
-                                            var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, 10, false).Result;
+                                            var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, canBuy ?? 0, false).Result;
                                             buyingPrice = buyPrice;
                                             isOrdering = true;
+                                            i = 1;
                                             OrderResult = JsonConvert.DeserializeObject<OrderResult>(rBuy);
                                             if (i == 1) { OrderID = OrderResult.result.id; }
+
                                         }
                                     }
                                 }
 
-                                if (i == 1)
+                                if (i == 1 && isOrdering)
                                     Console.WriteLine("Buying price:" + buyingPrice + ", waiting for buying...");
-                                else if (i == 70)
-                                {
-                                    var cancel = api.CancelOrderAsync(OrderID);
-                                    isOrdering = false;
-                                    Console.WriteLine("Order canceled!");
-                                    i = 0;
-                                }
+                                //else if (i == 70)
+                                //{
+                                //    var cancel = api.CancelOrderAsync(OrderID);
+                                //    isOrdering = false;
+                                //    Console.WriteLine("Order canceled!");
+                                //    i = 0;
+                                //}
                                 i++;
                             }
-                            else if (item.total >= 5)
+                            else if (item.availableWithoutBorrow >= 5)
                             {
                                 Console.WriteLine("Buy Price: " + buyingPrice);
                                 Console.WriteLine("Buy Success!");
@@ -240,7 +245,7 @@ namespace FtxApi_Test
                     {
                         if (item.coin == "APE")
                         {
-                            if (item.total >= 10)
+                            if (item.availableWithoutBorrow >= 10)
                             {
                                 if (!isSelling)
                                 {
@@ -251,10 +256,10 @@ namespace FtxApi_Test
                                     {
                                         var rSell = api.PlaceOrderAsync(ins, SideType.sell, _askPrice_sell, OrderType.limit, item.availableWithoutBorrow ?? 0, false).Result;
                                         isSelling = true;
+                                        j = 1;
                                         OrderResult = JsonConvert.DeserializeObject<OrderResult>(rSell);
                                         if (j == 1) { OrderID = OrderResult.result.id; }
-                                        Console.WriteLine("Sell Price: " + askPrice_sell);
-                                        Console.WriteLine("Waiting for selling...");
+                                        Console.WriteLine("Selling Price: " + askPrice_sell, "Waiting for selling...");
                                     }
                                 }
                                 else if (isSelling && alreadySelling)
@@ -264,26 +269,26 @@ namespace FtxApi_Test
                                 }
 
                                 // Lowewr the selling price
-                                if (j == 1 && alreadySelling)
-                                    Console.WriteLine("Selling price:" + askPrice_sell + ", waiting for selling...");
-                                else if (j == 10000)
-                                {
-                                    var cancel = api.CancelOrderAsync(OrderID);
-                                    Console.WriteLine("Order canceled!");
-                                    _askPrice_sell = await GetPrice(api, ins);
-                                    askPrice_sell = _askPrice_sell;
+                                //if (j == 1 && alreadySelling)
+                                //    Console.WriteLine("Selling price:" + askPrice_sell + ", waiting for selling...");
+                                //else if (j == 10000)
+                                //{
+                                //    var cancel = api.CancelOrderAsync(OrderID);
+                                //    Console.WriteLine("Order canceled!");
+                                //    _askPrice_sell = await GetPrice(api, ins);
+                                //    askPrice_sell = _askPrice_sell;
 
-                                    await Task.Delay(1000);
-                                    var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell ?? 0, OrderType.limit, item.availableWithoutBorrow ?? 0, false).Result;
-                                    isSelling = true;
-                                    OrderResult = JsonConvert.DeserializeObject<OrderResult>(rSell);
-                                    OrderID = OrderResult.result.id;
-                                    Console.WriteLine("Selling price:" + askPrice_sell + ", waiting for selling...");
-                                    j = 0;
-                                }
+                                //    await Task.Delay(1000);
+                                //    var rSell = api.PlaceOrderAsync(ins, SideType.sell, askPrice_sell ?? 0, OrderType.limit, item.availableWithoutBorrow ?? 0, false).Result;
+                                //    isSelling = true;
+                                //    OrderResult = JsonConvert.DeserializeObject<OrderResult>(rSell);
+                                //    OrderID = OrderResult.result.id;
+                                //    Console.WriteLine("Selling price:" + askPrice_sell + ", waiting for selling...");
+                                //    j = 0;
+                                //}
                                 j++;
                             }
-                            else if (item.total < 1)
+                            else if (item.availableWithoutBorrow < 1)
                             {
                                 Console.WriteLine("Sell Success!");
                                 Console.WriteLine("###########################################");
