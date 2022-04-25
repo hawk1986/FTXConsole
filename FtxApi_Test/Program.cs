@@ -188,7 +188,7 @@ namespace FtxApi_Test
                                 if (!isOrdering)
                                 {
                                     _askPrice_buy = await GetPrice(api, ins);
-                                    if (_askPrice_buy <= 16.28)
+                                    if (_askPrice_buy <= 17.285)
                                         buyPrice = (_askPrice_buy);
 
                                     // check if enough balance
@@ -252,7 +252,7 @@ namespace FtxApi_Test
                                     _askPrice_sell = await GetPrice(api, ins);
                                     //askPrice_sell = buyPrice + 0.02;
                                     //profit = ((askPrice_sell) - (buyPrice));
-                                    if (_askPrice_sell >= 16.8)
+                                    if (_askPrice_sell >= 17.305)
                                     {
                                         var rSell = api.PlaceOrderAsync(ins, SideType.sell, _askPrice_sell, OrderType.limit, item.availableWithoutBorrow ?? 0, false).Result;
                                         isSelling = true;
