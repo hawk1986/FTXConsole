@@ -13,7 +13,7 @@ namespace FtxApi_Test
     {
         static void Main()
         {
-            var client = new Client("uQcWy7G1OJGA11D4soAKXLVXCoCAjzzqS4pydssf", "J1NHwkCr5rMvC0AAQNkBreaKZUzy8L8ECcXgQQ8o");
+            var client = new Client("", "");
             var api = new FtxRestApi(client);
             var wsApi = new FtxWebSocketApi("wss://ftx.com/ws/");
 
