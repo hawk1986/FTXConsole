@@ -13,7 +13,7 @@ namespace FtxApi_Test
     {
         static void Main()
         {
-            var client = new Client("", "");
+            var client = new Client("lRBAa_NfGBBjjgT50rSBkgnx5UnGCSQCswpsjDUB", "FaHdaCiIQcyhP0opbSlnt6io3Ug7xz1tNvhwz9Wy");
             var api = new FtxRestApi(client);
             var wsApi = new FtxWebSocketApi("wss://ftx.com/ws/");
 
@@ -49,6 +49,29 @@ namespace FtxApi_Test
                 Main();
 
                 //System.Diagnostics.Process.GetCurrentProcess().Kill();
+            }
+            finally
+            {
+                #region Cancel Orders
+                var ins = "APE/USD";
+                // if error, check orders...
+                var checkOrders = api.GetOpenOrdersAsync(ins).Result;
+                OrderStatus orderStatus = JsonConvert.DeserializeObject<OrderStatus>(checkOrders);
+                var status = orderStatus.result;
+                foreach (var item in status)
+                {
+                    if (item.market == "APE/USD" && item.side == "buy")
+                    {
+                        var cancel = api.CancelOrderAsync(item.id);
+                        Console.WriteLine("Order canceled!");
+                    }
+                    else if (item.market == "APE/USD" && item.side == "sell")
+                    {
+                        var cancel = api.CancelOrderAsync(item.id);
+                        Console.WriteLine("Order canceled!");
+                    }
+                }
+                #endregion
             }
 
             //RestTests(api).Wait();
@@ -86,12 +109,18 @@ namespace FtxApi_Test
             double _askPrice_buy = 0;
             bool isOrdering = false;
             bool isBought = false;
+            
             // sell param
             var j = 1;
             double _askPrice_sell = 0;
             bool isSelling = false;
             bool alreadySelling = false;
             #endregion
+
+            // how to get average price?
+
+            double wantBuyPriec = 17.85;
+            double wantSellPriec = 17.92;
 
             while (true)
             {
@@ -108,13 +137,12 @@ namespace FtxApi_Test
                         Console.WriteLine("Round: " + buyTimes);
                         Console.WriteLine("Coin: " + item.coin + ", AvailableWithoutBorrow: " + item.availableWithoutBorrow);
                         usdAvailableWithoutBorrow = item.availableWithoutBorrow;
-                        firstBalance = firstBalance == 0 ? item.availableWithoutBorrow : firstBalance;
-                        Console.WriteLine("Profit: " + (item.availableWithoutBorrow  - firstBalance));
-                        sellProfit = item.availableWithoutBorrow - firstBalance;
+                        firstBalance = firstBalance == 0 ? usdAvailableWithoutBorrow : firstBalance;
+                        Console.WriteLine("Profit: " + (usdAvailableWithoutBorrow - firstBalance));
+                        sellProfit = usdAvailableWithoutBorrow - firstBalance;
                         totalProfit = totalProfit + sellProfit;
                         Console.WriteLine("Total Profit: " + totalProfit);
                         Console.WriteLine("###########################################");
-                        firstBalance = item.usdValue;
                     }
                     //if (item.coin == "APE")
                     //{
@@ -190,18 +218,18 @@ namespace FtxApi_Test
                                 if (!isOrdering)
                                 {
                                     _askPrice_buy = await GetPrice(api, ins);
-                                    if (_askPrice_buy <= 18.58)
+                                    if (_askPrice_buy <= wantBuyPriec)
                                         buyPrice = (_askPrice_buy);
 
                                     // check if enough balance
-                                    var canBuy = usdAvailableWithoutBorrow ?? 0 / _askPrice_buy;
+                                    var canBuy = (usdAvailableWithoutBorrow ?? 0) / _askPrice_buy;
 
                                     if (buyPrice > 0)
                                     {
                                         // Input amount coin you want to buy
                                         if (canBuy - 2 > 1)
                                         {
-                                            var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, canBuy - 2, false).Result;
+                                            var rBuy = api.PlaceOrderAsync(ins, SideType.buy, (buyPrice ?? 0), OrderType.limit, canBuy - 2, false).Result;
                                             buyingPrice = buyPrice;
                                             isOrdering = true;
                                             i = 1;
@@ -254,7 +282,7 @@ namespace FtxApi_Test
                                     _askPrice_sell = await GetPrice(api, ins);
                                     //askPrice_sell = buyPrice + 0.02;
                                     //profit = ((askPrice_sell) - (buyPrice));
-                                    if (_askPrice_sell >= 18.6)
+                                    if (_askPrice_sell >= wantSellPriec)
                                     {
                                         var rSell = api.PlaceOrderAsync(ins, SideType.sell, _askPrice_sell, OrderType.limit, item.availableWithoutBorrow ?? 0, false).Result;
                                         isSelling = true;
