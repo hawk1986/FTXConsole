@@ -13,7 +13,7 @@ namespace FtxApi_Test
     {
         static void Main()
         {
-            var client = new Client("PWWK67zUR_wz9RkY62Cu6rwfq4i3RjBwjnbfsyR1", "N4heQxCnxD-ZpdErU-cGT7r4QLv6un15YbHvkFLz");
+            var client = new Client("uQcWy7G1OJGA11D4soAKXLVXCoCAjzzqS4pydssf", "J1NHwkCr5rMvC0AAQNkBreaKZUzy8L8ECcXgQQ8o");
             var api = new FtxRestApi(client);
             var wsApi = new FtxWebSocketApi("wss://ftx.com/ws/");
 
@@ -188,7 +188,7 @@ namespace FtxApi_Test
                                 if (!isOrdering)
                                 {
                                     _askPrice_buy = await GetPrice(api, ins);
-                                    if (_askPrice_buy <= 17.285)
+                                    if (_askPrice_buy <= 18.52)
                                         buyPrice = (_askPrice_buy);
 
                                     // check if enough balance
@@ -252,7 +252,7 @@ namespace FtxApi_Test
                                     _askPrice_sell = await GetPrice(api, ins);
                                     //askPrice_sell = buyPrice + 0.02;
                                     //profit = ((askPrice_sell) - (buyPrice));
-                                    if (_askPrice_sell >= 17.305)
+                                    if (_askPrice_sell >= 18.6)
                                     {
                                         var rSell = api.PlaceOrderAsync(ins, SideType.sell, _askPrice_sell, OrderType.limit, item.availableWithoutBorrow ?? 0, false).Result;
                                         isSelling = true;
