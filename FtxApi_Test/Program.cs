@@ -73,22 +73,22 @@ namespace FtxApi_Test
             {
                 #region Cancel Orders
                 // if error or exit, cancel orders...
-                //var isCanceled = false;
-                //var ins = "APE/USD";
-                //while (!isCanceled)
-                //{
-                //    var checkOrders = api.GetOpenOrdersAsync(ins).Result;
-                //    OrderStatus orderStatus = JsonConvert.DeserializeObject<OrderStatus>(checkOrders);
-                //    var status = orderStatus.result;
-                //    if (status.Count > 0)
-                //    {
-                //        var cancelAllOders = api.CancelAllOrdersAsync(ins).Result;
-                //    }
-                //    else
-                //    {
-                //        isCanceled = true;
-                //    }
-                //}
+                var isCanceled = false;
+                var ins = "APE/USD";
+                while (!isCanceled)
+                {
+                    var checkOrders = api.GetOpenOrdersAsync(ins).Result;
+                    OrderStatus orderStatus = JsonConvert.DeserializeObject<OrderStatus>(checkOrders);
+                    var status = orderStatus.result;
+                    if (status.Count > 0)
+                    {
+                        var cancelAllOders = api.CancelAllOrdersAsync(ins).Result;
+                    }
+                    else
+                    {
+                        isCanceled = true;
+                    }
+                }
                 #endregion
             }
 
