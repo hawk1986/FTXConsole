@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using FtxApi;
@@ -19,58 +20,75 @@ namespace FtxApi_Test
 
             try
             {
-                BuyAndSell(api).Wait();
+                var ins = "APE";
+                var dateStart = DateTime.UtcNow.AddMinutes(-10);
+                var dateEnd = DateTime.UtcNow.AddMinutes(-5);
+                var r6 = api.GetHistoricalPricesAsync1(ins, 300, 30, dateStart, dateEnd).Result;
+                Console.WriteLine(r6);
+
+                //BuyAndSell(api).Wait();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
 
                 #region Cancel Orders
+                // if error or exit, cancel orders...
+                var isCanceled = false;
                 var ins = "APE/USD";
-                // if error, check orders...
-                var checkOrders = api.GetOpenOrdersAsync(ins).Result;
-                OrderStatus orderStatus = JsonConvert.DeserializeObject<OrderStatus>(checkOrders);
-                var status = orderStatus.result;
-                foreach (var item in status)
+                while (!isCanceled)
                 {
-                    if (item.market == "APE/USD" && item.side == "buy")
+                    var checkOrders = api.GetOpenOrdersAsync(ins).Result;
+                    OrderStatus orderStatus = JsonConvert.DeserializeObject<OrderStatus>(checkOrders);
+                    var status = orderStatus.result;
+                    if (status.Count > 0)
                     {
-                        var cancel = api.CancelOrderAsync(item.id);
-                        Console.WriteLine("Order canceled!");
+                        var cancelAllOders = api.CancelAllOrdersAsync(ins).Result;
                     }
-                    else if (item.market == "APE/USD" && item.side == "sell")
+                    else
                     {
-                        var cancel = api.CancelOrderAsync(item.id);
-                        Console.WriteLine("Order canceled!");
+                        isCanceled = true;
                     }
                 }
+
+                //foreach (var item in status)
+                //{
+                //    if (item.market == "APE/USD" && item.side == "buy")
+                //    {
+                //        var cancel = api.CancelOrderAsync(item.id);
+                //        Console.WriteLine("Order canceled!");
+                //    }
+                //    else if (item.market == "APE/USD" && item.side == "sell")
+                //    {
+                //        var cancel = api.CancelOrderAsync(item.id);
+                //        Console.WriteLine("Order canceled!");
+                //    }
+                //}
                 #endregion
 
                 Main();
 
-                //System.Diagnostics.Process.GetCurrentProcess().Kill();
             }
             finally
             {
                 #region Cancel Orders
-                var ins = "APE/USD";
-                // if error, check orders...
-                var checkOrders = api.GetOpenOrdersAsync(ins).Result;
-                OrderStatus orderStatus = JsonConvert.DeserializeObject<OrderStatus>(checkOrders);
-                var status = orderStatus.result;
-                foreach (var item in status)
-                {
-                    if (item.market == "APE/USD" && item.side == "buy")
-                    {
-                        var cancel = api.CancelOrderAsync(item.id);
-                        Console.WriteLine("Order canceled!");
-                    }
-                    else if (item.market == "APE/USD" && item.side == "sell")
-                    {
-                        var cancel = api.CancelOrderAsync(item.id);
-                        Console.WriteLine("Order canceled!");
-                    }
-                }
+                // if error or exit, cancel orders...
+                //var isCanceled = false;
+                //var ins = "APE/USD";
+                //while (!isCanceled)
+                //{
+                //    var checkOrders = api.GetOpenOrdersAsync(ins).Result;
+                //    OrderStatus orderStatus = JsonConvert.DeserializeObject<OrderStatus>(checkOrders);
+                //    var status = orderStatus.result;
+                //    if (status.Count > 0)
+                //    {
+                //        var cancelAllOders = api.CancelAllOrdersAsync(ins).Result;
+                //    }
+                //    else
+                //    {
+                //        isCanceled = true;
+                //    }
+                //}
                 #endregion
             }
 
@@ -119,8 +137,8 @@ namespace FtxApi_Test
 
             // how to get average price?
 
-            double wantBuyPriec = 17.85;
-            double wantSellPriec = 17.92;
+            double wantBuyPriec = 17.95;
+            double wantSellPriec = 18.15;
 
             while (true)
             {
@@ -412,6 +430,7 @@ namespace FtxApi_Test
             var r26 = api.CancelOrderByClientIdAsync("12345").Result;
             var r27 = api.CancelAllOrdersAsync(ins).Result;
             var r28 = api.GetFillsAsync(ins, 20, dateStart, dateEnd).Result;
+            Console.WriteLine(r28);
             var r29 = api.GetFundingPaymentAsync(dateStart, dateEnd).Result;
             var r30 = api.GetLeveragedTokensListAsync().Result;
             var r31 = api.GetTokenInfoAsync("HEDGE").Result;
