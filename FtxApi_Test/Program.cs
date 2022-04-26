@@ -66,6 +66,7 @@ namespace FtxApi_Test
             var ins = "APE/USD";
 
             #region declare            
+            double? usdAvailableWithoutBorrow = 0;
             double? firstBalance = 0;
             double? askPrice = 0;
             double? askPrice1 = 0;
@@ -106,6 +107,7 @@ namespace FtxApi_Test
                     {
                         Console.WriteLine("Round: " + buyTimes);
                         Console.WriteLine("Coin: " + item.coin + ", AvailableWithoutBorrow: " + item.availableWithoutBorrow);
+                        usdAvailableWithoutBorrow = item.availableWithoutBorrow;
                         firstBalance = firstBalance == 0 ? item.availableWithoutBorrow : firstBalance;
                         Console.WriteLine("Profit: " + (item.availableWithoutBorrow  - firstBalance));
                         sellProfit = item.availableWithoutBorrow - firstBalance;
@@ -188,16 +190,16 @@ namespace FtxApi_Test
                                 if (!isOrdering)
                                 {
                                     _askPrice_buy = await GetPrice(api, ins);
-                                    if (_askPrice_buy <= 18.52)
+                                    if (_askPrice_buy <= 18.58)
                                         buyPrice = (_askPrice_buy);
 
                                     // check if enough balance
-                                    var canBuy = firstBalance ?? 0 / _askPrice_buy;
+                                    var canBuy = usdAvailableWithoutBorrow ?? 0 / _askPrice_buy;
 
                                     if (buyPrice > 0)
                                     {
                                         // Input amount coin you want to buy
-                                        if (canBuy > 1)
+                                        if (canBuy - 2 > 1)
                                         {
                                             var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, canBuy - 2, false).Result;
                                             buyingPrice = buyPrice;
