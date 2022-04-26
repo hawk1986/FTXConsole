@@ -20,11 +20,7 @@ namespace FtxApi_Test
 
             try
             {
-                var ins = "APE";
-                var dateStart = DateTime.UtcNow.AddMinutes(-10);
-                var dateEnd = DateTime.UtcNow.AddMinutes(-5);
-                var r6 = api.GetHistoricalPricesAsync1(ins, 300, 30, dateStart, dateEnd).Result;
-                Console.WriteLine(r6);
+
 
                 //BuyAndSell(api).Wait();
             }
@@ -135,8 +131,6 @@ namespace FtxApi_Test
             bool alreadySelling = false;
             #endregion
 
-            // how to get average price?
-
             double wantBuyPriec = 17.95;
             double wantSellPriec = 18.15;
 
@@ -180,48 +174,27 @@ namespace FtxApi_Test
                 #region Buy
                 while (!isBought)
                 {
-                    #region Get price 10 times
-                    //if (!isOrdering)
-                    //{
-                    //    for (var x = 1; x <= 10; x++)
-                    //    {
-                    //        _askPrice = await GetPrice(api, ins);
-                    //        if (x == 1)
-                    //        {
-                    //            askPrice1 = _askPrice;
-                    //            Console.WriteLine(askPrice1);
-                    //        }
-                    //        if (x == 5)
-                    //        {
-                    //            askPrice10 = _askPrice;
-                    //            Console.WriteLine(askPrice10);
-                    //        }
-                    //        if (x == 10)
-                    //        {
-                    //            askPrice20 = _askPrice;
-                    //            Console.WriteLine(askPrice20);
-                    //        }
-                    //    }
-                    //}
+                    #region Get last 10 times' average bar price to get high and low price (todo...) 
+                    if (!isOrdering)
+                    {
+                        for (var x = 1; x <= 10; x++)
+                        {
+                            #region Choose price condition
+                            var ins1 = "APE";
+                            var dateStart = DateTime.UtcNow.AddMinutes(-10);
+                            var dateEnd = DateTime.UtcNow.AddMinutes(-5);
+                            var r6 = api.GetHistoricalPricesAsync1(ins, 300, 30, dateStart, dateEnd).Result;
+                            Console.WriteLine(r6);
+                            #endregion
+                        }
+
+                        // choose the price
+                        wantBuyPriec = 17.95;
+                        wantSellPriec = 18.15;
+                    }
                     #endregion
 
-                    #region Choose price condition
-                    //// If  first price <= 10th price && first price <= 20th price => choose first price
-                    //if (askPrice1 <= askPrice10 && askPrice1 <= askPrice20)
-                    //    askPrice = askPrice1;
-                    //else if (askPrice1 - askPrice20 > 0.1)
-                    //{
-                    //    continue;
-                    //}
-                    //// If  first price >= 10th price && first price >= 20th price=> choose 20th price
-                    //else if (askPrice1 >= askPrice10 && askPrice1 >= askPrice20)
-                    //    askPrice = askPrice20;
-                    //else
-                    //{
-                    //    continue;
-                    //}
-                    #endregion
-
+                    #region Buying
                     var getApeBalance = api.GetBalancesAsync().Result;
                     BalanceResult ApeBalanceResult = JsonConvert.DeserializeObject<BalanceResult>(getApeBalance);
                     var ApeBalanceList = ApeBalanceResult.result;
@@ -236,7 +209,7 @@ namespace FtxApi_Test
                                 if (!isOrdering)
                                 {
                                     _askPrice_buy = await GetPrice(api, ins);
-                                    if (_askPrice_buy <= wantBuyPriec)
+                                    if (wantBuyPriec >= 0 && _askPrice_buy <= wantBuyPriec)
                                         buyPrice = (_askPrice_buy);
 
                                     // check if enough balance
@@ -279,6 +252,8 @@ namespace FtxApi_Test
                             }
                         }
                     }
+                    #endregion
+
                 }
                 #endregion
 
@@ -298,9 +273,7 @@ namespace FtxApi_Test
                                 if (!isSelling)
                                 {
                                     _askPrice_sell = await GetPrice(api, ins);
-                                    //askPrice_sell = buyPrice + 0.02;
-                                    //profit = ((askPrice_sell) - (buyPrice));
-                                    if (_askPrice_sell >= wantSellPriec)
+                                    if (wantSellPriec > 0 && _askPrice_sell >= wantSellPriec)
                                     {
                                         var rSell = api.PlaceOrderAsync(ins, SideType.sell, _askPrice_sell, OrderType.limit, item.availableWithoutBorrow ?? 0, false).Result;
                                         isSelling = true;
@@ -316,7 +289,7 @@ namespace FtxApi_Test
                                     alreadySelling = false;
                                 }
 
-                                // Lowewr the selling price
+                                #region Lowewr the selling price (Not using...)
                                 //if (j == 1 && alreadySelling)
                                 //    Console.WriteLine("Selling price:" + askPrice_sell + ", waiting for selling...");
                                 //else if (j == 10000)
@@ -334,6 +307,8 @@ namespace FtxApi_Test
                                 //    Console.WriteLine("Selling price:" + askPrice_sell + ", waiting for selling...");
                                 //    j = 0;
                                 //}
+                                #endregion
+
                                 j++;
                             }
                             else if (item.availableWithoutBorrow < 1)
