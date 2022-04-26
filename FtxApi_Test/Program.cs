@@ -192,14 +192,14 @@ namespace FtxApi_Test
                                         buyPrice = (_askPrice_buy);
 
                                     // check if enough balance
-                                    var canBuy = firstBalance / _askPrice_buy;
+                                    var canBuy = firstBalance ?? 0 / _askPrice_buy;
 
                                     if (buyPrice > 0)
                                     {
                                         // Input amount coin you want to buy
                                         if (canBuy > 1)
                                         {
-                                            var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, canBuy ?? 0, false).Result;
+                                            var rBuy = api.PlaceOrderAsync(ins, SideType.buy, buyPrice ?? 0, OrderType.limit, canBuy - 2, false).Result;
                                             buyingPrice = buyPrice;
                                             isOrdering = true;
                                             i = 1;
