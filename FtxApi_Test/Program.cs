@@ -134,11 +134,10 @@ namespace FtxApi_Test
 
             while (true)
             {
-                double wantBuyPriceLow = 0;
-                double wantBuyPriceHigh = 0;
-                double wantSellPriceLow = 0;
-                double wantSellPriceHigh = 0;
-
+                double priceOpen = 0;
+                double priceHigh = 0;
+                double priceLow = 0;
+                double priceClose = 0;
                 buyTimes++;
 
                 #region get Balance
@@ -180,16 +179,16 @@ namespace FtxApi_Test
                     #region GetHistoryPrices & decide the buying and selling price
                     if (!isOrdering)
                     {
-                        var price = GetHistoryPrices(api, "APE", out double canBuyLow, out double canBuyHigh, out double canSellLow, out double canSellHigh, out string color);
+                        var price = GetHistoryPrices(api, "APE", out double openPrice, out double highPrice, out double lowPrice, out double closePrice, out string _color);
 
                         // check if can order
-                        if (color == "Green")
+                        //if (_color == "Green")
                         {
                             // choose the price
-                            wantBuyPriceLow = canBuyLow;
-                            wantBuyPriceHigh = canBuyHigh;
-                            wantSellPriceLow = canSellLow;
-                            wantSellPriceHigh = canSellHigh;
+                            priceOpen = openPrice;
+                            priceHigh = highPrice;
+                            priceLow = lowPrice;
+                            priceClose = closePrice;
                         }
                     }
                     #endregion
@@ -259,21 +258,24 @@ namespace FtxApi_Test
                     // Buy Condition
                     if (!isOrdering)
                     {
-                        if (wantBuyPriceLow > 0 && wantBuyPriceHigh > 0 && wantBuyPriceLow <= nowPrice && wantBuyPriceHigh >= nowPrice)
+                        if (priceLow > 0)
                         {
-                            _askPrice_buy = nowPrice;
+                            _askPrice_buy = (priceOpen + priceClose) / 2;
                             // Call Order Api
                             // Check really ordering
                             isOrdering = true;
 
                             // wait for 50 times then cancel and order again until bought
                         }
+                        if (i == 1 && isOrdering)
+                            Console.WriteLine("Buying price:" + _askPrice_buy + ", waiting for buying...");
+                        i++;
                     }
-                    if (_askPrice_buy <= nowPrice)
+                    if (_askPrice_buy >= nowPrice)
                     {
                         // if bought success
                         Console.WriteLine("Bought Success!");
-                        Console.WriteLine("Bought Price: " + nowPrice);
+                        Console.WriteLine("Bought Price: " + _askPrice_buy);
                         buyPrice = nowPrice;
                         isOrdering = true;
                         isBought = true;
@@ -361,8 +363,8 @@ namespace FtxApi_Test
 
                     if (!isSelling)
                     {
-                        if (wantSellPriceLow > 0 && wantSellPriceHigh > 0 && wantSellPriceLow <= nowPrice && wantSellPriceHigh >= nowPrice)
-                            _askPrice_sell = nowPrice;
+                        if (priceHigh > 0)
+                            _askPrice_sell = _askPrice_buy + 0.02;
                         // Call Order Api
 
                             // Check really selling
@@ -392,13 +394,15 @@ namespace FtxApi_Test
         #endregion
 
         #region GetHistoryPrices
-        private static Price GetHistoryPrices(FtxRestApi api, string ins, out double canBuyLow, out double canBuyHigh, out double canSellLow, out double canSellHigh, out string color)
+        private static Price GetHistoryPrices(FtxRestApi api, string ins, out double openPrice, out double highPrice, out double lowPrice, out double closePrice, out string _color)
         {
             #region declare
             var priceList = new List<Price>();
             var price = new Price();
-            var i = -55;
-            var j = -50;
+            //var i = -55;
+            //var j = -50;
+            var i = -10;
+            var j = -5;
             double high = 0;
             double low = 0;
             double open = 0;
@@ -410,11 +414,11 @@ namespace FtxApi_Test
             #endregion
 
             #region Get history bar prices
-            for (var x = 1; x <= 10; x++)
+            for (var x = 1; x <= 2; x++)
             {
                 i = i + 5;
                 j = j + 5;
-                var _color = string.Empty;
+                var color = string.Empty;
                 var dateStart = DateTime.UtcNow.AddMinutes(i);
                 var dateEnd = DateTime.UtcNow.AddMinutes(j);
                 var gethistoryPrice = api.GetHistoricalPricesAsync1(ins, 300, 30, dateStart, dateEnd).Result;
@@ -423,31 +427,31 @@ namespace FtxApi_Test
                 foreach (var item in priceResult)
                 {
                     var tempData = new Price();
-                    Console.WriteLine("i: " + i + " j: " + j);
-                    Console.WriteLine("Time: " + Convert.ToDateTime(item.startTime).ToLocalTime().ToString("HH:mm:ss"));
+                    //Console.WriteLine("i: " + i + " j: " + j);
+                    //Console.WriteLine("Time: " + Convert.ToDateTime(item.startTime).ToLocalTime().ToString("HH:mm:ss"));
                     if (item.open < item.close)
                     {
-                        _color = "Green";
-                        Console.WriteLine("Color: Green");
+                        color = "Green";
+                        //Console.WriteLine("Color: Green");
                     }
                     else if (item.open > item.close)
                     {
-                        _color = "Red";
-                        Console.WriteLine("Color: Red");
+                        color = "Red";
+                        //Console.WriteLine("Color: Red");
                     }
                     else
                     {
-                        _color = "White";
-                        Console.WriteLine("Color: White");
+                        color = "White";
+                        //Console.WriteLine("Color: White");
                     }
 
-                    Console.WriteLine("O: " + item.open + " H: " + item.high + " L: " + item.low + " C: " + item.close);
-                    Console.WriteLine("###########################################");
+                    //Console.WriteLine("O: " + item.open + " H: " + item.high + " L: " + item.low + " C: " + item.close);
+                    //Console.WriteLine("###########################################");
                     tempData.open = item.open;
                     tempData.high = item.high;
                     tempData.low = item.low;
                     tempData.close = item.close;
-                    tempData.color = _color;
+                    tempData.color = color;
                     
                     priceList.Add(item);
 
@@ -472,21 +476,42 @@ namespace FtxApi_Test
             Console.WriteLine("O: " + aveOpen + " H: " + aveHigh + " L: " + aveLow + " C: " + aveClose);
             if (aveOpen < aveClose)
             {
-                color = "Green";
+                _color = "Green";
                 Console.WriteLine("Color: Green");
             }
             else if (aveOpen > aveClose)
             {
-                color = "Red";
+                _color = "Red";
                 Console.WriteLine("Color: Red");
             }
             else
             {
-                color = "White";
+                _color = "White";
                 Console.WriteLine("Color: White");
             }
 
             Console.WriteLine("###########################################");
+
+            // new condition, choose the last tow bars compare+
+            if (priceList[0].color == "Red" && priceList[1].color == "Red")
+            { }
+            else if (priceList[0].color == "Red" && priceList[1].color == "Green")
+            { }
+            else if (priceList[0].color == "Red" && priceList[1].color == "White")
+            { }
+            else if (priceList[0].color == "Green" && priceList[1].color == "Red")
+            { }
+            else if (priceList[0].color == "Green" && priceList[1].color == "Green")
+            { }
+            else if (priceList[0].color == "Green" && priceList[1].color == "White")
+            { }
+            else if (priceList[0].color == "White" && priceList[1].color == "Red")
+            { }
+            else if (priceList[0].color == "White" && priceList[1].color == "Green")
+            { }
+            else if (priceList[0].color == "White" && priceList[1].color == "White")
+            { }
+
 
             // return average model
             price.open = aveOpen;
@@ -495,10 +520,10 @@ namespace FtxApi_Test
             price.close = aveClose;
             #endregion
 
-            canBuyLow = aveClose;
-            canBuyHigh = aveOpen;
-            canSellLow = aveClose;
-            canSellHigh = aveOpen;
+            openPrice = aveOpen;
+            highPrice = aveHigh;
+            lowPrice = aveLow;
+            closePrice = aveClose;
 
             return price;
 
