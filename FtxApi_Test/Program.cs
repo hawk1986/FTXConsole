@@ -121,6 +121,7 @@ namespace FtxApi_Test
             OrderResult OrderResult = new OrderResult();
             // buy param
             var i = 1;
+            var color = string.Empty;
             double _askPrice_buy = 0;
             bool isOrdering = false;
             bool isBought = false;
@@ -182,13 +183,18 @@ namespace FtxApi_Test
                         var price = GetHistoryPrices(api, "APE", out double openPrice, out double highPrice, out double lowPrice, out double closePrice, out string _color);
 
                         // check if can order
-                        //if (_color == "Green")
+                        if (_color == "Red")
                         {
+                            color = _color;
                             // choose the price
                             priceOpen = openPrice;
                             priceHigh = highPrice;
                             priceLow = lowPrice;
                             priceClose = closePrice;
+
+                            // 2022.05.26
+                            // open > close == red
+                            // close > low
                         }
                     }
                     #endregion
@@ -253,36 +259,54 @@ namespace FtxApi_Test
                     //}
                     #endregion
 
-                    #region test Buying
-                    var nowPrice = await GetPrice(api, ins);
-                    // Buy Condition
-                    if (!isOrdering)
+                    if (color == "Red" && priceClose > priceLow)
                     {
-                        if (priceLow > 0)
+                        #region test Buying
+                        var nowPrice = await GetPrice(api, ins);
+                        var bid = nowPrice.bid;
+                        var ask = nowPrice.ask;
+
+                        // 2022.05.26 todo check the line is going down then buy maybe will be greater chance to have profit
+                        //if (bid - ask <= -0.0045 && bid - ask >= -0.0065)
                         {
-                            _askPrice_buy = (priceOpen + priceClose) / 2;
-                            // Call Order Api
-                            // Check really ordering
-                            isOrdering = true;
+                            // Buy Condition (buy at market price)
+                            if (!isOrdering)
+                            {
+                                //Console.WriteLine("ask price:" + ask);
+                                //Console.WriteLine("bid - ask:" + (bid - ask));
 
-                            // wait for 50 times then cancel and order again until bought
+                                if (ask > 0)
+                                {
+                                    _askPrice_buy = ask;
+                                    // Call Order Api
+                                    // Check really ordering
+                                    isOrdering = true;
+
+                                    // wait for 50 times then cancel and order again until bought
+                                }
+                                if (i == 1 && isOrdering)
+                                    Console.WriteLine("Buying price:" + _askPrice_buy + ", waiting for buying...");
+                                if (i == 50 && isOrdering)
+                                {
+                                    // cancel odering and rebuy
+                                }
+                                i++;
+                            }
                         }
-                        if (i == 1 && isOrdering)
-                            Console.WriteLine("Buying price:" + _askPrice_buy + ", waiting for buying...");
-                        i++;
-                    }
-                    if (_askPrice_buy >= nowPrice)
-                    {
-                        // if bought success
-                        Console.WriteLine("Bought Success!");
-                        Console.WriteLine("Bought Price: " + _askPrice_buy);
-                        buyPrice = nowPrice;
-                        isOrdering = true;
-                        isBought = true;
-                        i = 1;
-                    }
-                    #endregion
 
+                        if (_askPrice_buy >= nowPrice.ask)
+                        {
+                            // if bought success
+                            var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
+                            Console.WriteLine("NowTime: " + nowTime);
+                            Console.WriteLine("Bought Success!");
+                            Console.WriteLine("Bought Price: " + _askPrice_buy);
+                            isOrdering = true;
+                            isBought = true;
+                            i = 1;
+                        }
+                        #endregion
+                    }
                 }
                 #endregion
 
@@ -360,25 +384,24 @@ namespace FtxApi_Test
                 while (isBought)
                 {
                     var nowPrice = await GetPrice(api, ins);
-
+                    //Console.WriteLine("bid price:" + nowPrice.bid);
+                    //Console.WriteLine("bid - ask:" + (nowPrice.bid - nowPrice.ask));
                     if (!isSelling)
                     {
-                        if (priceHigh > 0)
-                            _askPrice_sell = _askPrice_buy + 0.02;
+                        if (_askPrice_buy > 0)
+                            _askPrice_sell = _askPrice_buy + 0.01; 
                         // Call Order Api
-
-                            // Check really selling
+                        // sell at limit price
+                        // Check selling order is existed
 
                         isSelling = true;
                         Console.WriteLine("Selling Price: " + _askPrice_sell + ", waiting for selling...");
-
-                        // if sold success
-
                     }
 
-                    if (_askPrice_sell <= nowPrice)
+                    if (_askPrice_sell <= nowPrice.bid)
                     {
-
+                        var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
+                        Console.WriteLine("NowTime: " + nowTime);
                         Console.WriteLine("Sell Success!");
                         Console.WriteLine("###########################################");
                         _askPrice_sell = 0;
@@ -401,8 +424,9 @@ namespace FtxApi_Test
             var price = new Price();
             //var i = -55;
             //var j = -50;
-            var i = -10;
-            var j = -5;
+            var i = -15;
+            var j = -10;
+            var k = 2;
             double high = 0;
             double low = 0;
             double open = 0;
@@ -414,7 +438,7 @@ namespace FtxApi_Test
             #endregion
 
             #region Get history bar prices
-            for (var x = 1; x <= 2; x++)
+            for (var x = 1; x <= k; x++)
             {
                 i = i + 5;
                 j = j + 5;
@@ -464,54 +488,38 @@ namespace FtxApi_Test
             #endregion
 
             #region decide price
-            var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
-            Console.WriteLine("NowTime: " + nowTime);
-
             // average price
-            aveOpen = open / 10;
-            aveHigh = high / 10;
-            aveLow = low / 10;            
-            aveClose = close / 10;
-            Console.WriteLine("################Average####################");
-            Console.WriteLine("O: " + aveOpen + " H: " + aveHigh + " L: " + aveLow + " C: " + aveClose);
+            aveOpen = open / k ;
+            aveHigh = high / k;
+            aveLow = low / k;            
+            aveClose = close / k;
+
             if (aveOpen < aveClose)
             {
                 _color = "Green";
-                Console.WriteLine("Color: Green");
             }
             else if (aveOpen > aveClose)
             {
                 _color = "Red";
-                Console.WriteLine("Color: Red");
             }
             else
             {
                 _color = "White";
-                Console.WriteLine("Color: White");
             }
 
-            Console.WriteLine("###########################################");
-
-            // new condition, choose the last tow bars compare+
-            if (priceList[0].color == "Red" && priceList[1].color == "Red")
-            { }
-            else if (priceList[0].color == "Red" && priceList[1].color == "Green")
-            { }
-            else if (priceList[0].color == "Red" && priceList[1].color == "White")
-            { }
-            else if (priceList[0].color == "Green" && priceList[1].color == "Red")
-            { }
-            else if (priceList[0].color == "Green" && priceList[1].color == "Green")
-            { }
-            else if (priceList[0].color == "Green" && priceList[1].color == "White")
-            { }
-            else if (priceList[0].color == "White" && priceList[1].color == "Red")
-            { }
-            else if (priceList[0].color == "White" && priceList[1].color == "Green")
-            { }
-            else if (priceList[0].color == "White" && priceList[1].color == "White")
-            { }
-
+            if (priceList[0].color == "Red" && priceList[1].color == "Green")
+            {
+                var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
+                Console.WriteLine("###############Color:" + _color + "##################");
+                Console.WriteLine("################Average####################");
+                Console.WriteLine("NowTime: " + nowTime);
+                Console.WriteLine("O: " + aveOpen + " H: " + aveHigh + " L: " + aveLow + " C: " + aveClose);
+                Console.WriteLine("###########################################");
+            }
+            else 
+            {
+                //Console.WriteLine("###############Color:" + _color + "##################");
+            }
 
             // return average model
             price.open = aveOpen;
@@ -555,15 +563,17 @@ namespace FtxApi_Test
         #endregion
 
         #region GetPrice
-        private static async Task<double> GetPrice(FtxRestApi api, string ins)
+        private static async Task<getPrice> GetPrice(FtxRestApi api, string ins)
         {
             await Task.Delay(1000);
+            var result = new getPrice();
             double askprice = 0;
             var buyMKPrice = api.GetSingleMarketsAsync(ins).Result;
             MarketResult MarketResult_Buy = JsonConvert.DeserializeObject<MarketResult>(buyMKPrice);
             var Market_Buy = MarketResult_Buy.result;
-            askprice = Market_Buy.ask ?? 0;
-            return askprice; 
+            result.ask = Market_Buy.ask ?? 0;
+            result.bid = Market_Buy.bid ?? 0;
+            return result; 
         }
         #endregion
 
