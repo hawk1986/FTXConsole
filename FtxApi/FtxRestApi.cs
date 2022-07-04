@@ -92,7 +92,7 @@ namespace FtxApi
 
         public async Task<dynamic> GetHistoricalPricesAsync1(string futureName, int resolution, int limit, DateTime start, DateTime end)
         {
-            var resultString = $"api/indexes/{futureName}/candles?resolution={resolution}&start_time={Util.Util.GetSecondsFromEpochStart(start)}&end_time={Util.Util.GetSecondsFromEpochStart(end)}";
+            var resultString = $"api/indexes/{futureName}/candles?resolution={resolution}&start_time={Util.Util.GetSecondsFromEpochStart(start)}";
             var result = await CallAsync(HttpMethod.Get, resultString);
 
             return ParseResponce(result);
