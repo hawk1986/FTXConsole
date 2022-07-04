@@ -477,7 +477,7 @@ namespace FtxApi_Test
 
             if (priceList.Count == 4)
             {
-                if (priceList[1].color == "Red" && (priceList[2].color == "Red" || priceList[2].color == "White") && (priceList[3].color == "Red" || priceList[2].color == "White"))
+                if (priceList[1].color == "Red" && (priceList[2].color == "Red" || priceList[2].color == "White") && (priceList[3].color == "Red" || priceList[3].color == "White"))
                 {
                     Console.WriteLine("True");
 
@@ -500,7 +500,7 @@ namespace FtxApi_Test
             }
             else
             {
-                if (priceList[0].low >= priceList[1].low && priceList[1].low >= priceList[2].low)
+                if (priceList[0].color == "Red" && (priceList[1].color == "Red" || priceList[1].color == "White") && (priceList[2].color == "Red" || priceList[2].color == "White"))
                 {
                     Console.WriteLine("True");
                     //var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
