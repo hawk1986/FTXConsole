@@ -181,7 +181,7 @@ namespace FtxApi_Test
 
                         // 2022.05.26
                         // open > close == red
-                        // close > low
+                        // close > low == green
                     }
                     #endregion
 
@@ -290,6 +290,7 @@ namespace FtxApi_Test
                             isBought = true;
                             i = 1;
                         }
+                        
                         #endregion
                     }
                 }
@@ -371,27 +372,31 @@ namespace FtxApi_Test
                     if (!isSelling)
                     {
                         if (_askPrice_buy > 0 && nowPrice.bid > _askPrice_buy + 0.01)
+                        {
                             _askPrice_sell = nowPrice.bid;
 
-                        // todo...Call Order Api
+                            // todo...Call Order Api
 
-                        // todo...Check selling order is existed
+                            // todo...Check selling order is existed
 
-                        isSelling = true;
-                        Console.WriteLine("Selling Price: " + _askPrice_sell + ", waiting for selling...");
+                            isSelling = true;
+                            Console.WriteLine("Selling Price: " + _askPrice_sell + ", waiting for selling...");
+                        }
                     }
-
                     // todo...check really sold
-                    if (_askPrice_sell <= nowPrice.bid)
+                    else
                     {
-                        var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
-                        Console.WriteLine("NowTime: " + nowTime);
-                        Console.WriteLine("Sell Success!");
-                        Console.WriteLine("###########################################");
-                        _askPrice_sell = 0;
-                        isSelling = false;
-                        isBought = false;
-                        isOrdering = false;
+                        if (_askPrice_sell <= nowPrice.bid)
+                        {
+                            var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
+                            Console.WriteLine("NowTime: " + nowTime);
+                            Console.WriteLine("Sell Success!");
+                            Console.WriteLine("###########################################");
+                            _askPrice_sell = 0;
+                            isSelling = false;
+                            isBought = false;
+                            isOrdering = false;
+                        }
                     }
                     #endregion
 
@@ -420,9 +425,9 @@ namespace FtxApi_Test
             #endregion
 
             #region Get history bar prices
-            var dateStart = DateTime.UtcNow.AddMinutes(-1);
-            var dateEnd = DateTime.UtcNow.AddSeconds(-15);
-            var gethistoryPrice = api.GetHistoricalPricesAsync1(ins, 15, 30, dateStart, dateEnd).Result;
+            var dateStart = DateTime.UtcNow.AddMinutes(-3);
+            var dateEnd = DateTime.UtcNow.AddMinutes(0);
+            var gethistoryPrice = api.GetHistoricalPricesAsync1(ins, 60, 30, dateStart, dateEnd).Result;
             HistoryPrice historyPrices = JsonConvert.DeserializeObject<HistoryPrice>(gethistoryPrice);
             var priceResult = historyPrices.result;
             foreach (var item in priceResult)
@@ -444,11 +449,11 @@ namespace FtxApi_Test
                 tempData.close = item.close;
                 tempData.color = _color;
 
-                var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
-                Console.WriteLine("StartTime: " + tempData.startTime);
-                Console.WriteLine("Color: " + tempData.color);
-                Console.WriteLine("O: " + tempData.open + " H: " + tempData.high + " L: " + tempData.low + " C: " + tempData.close);
-                Console.WriteLine("###########################################");
+                //var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
+                //Console.WriteLine("StartTime: " + tempData.startTime);
+                //Console.WriteLine("Color: " + tempData.color);
+                //Console.WriteLine("O: " + tempData.open + " H: " + tempData.high + " L: " + tempData.low + " C: " + tempData.close);
+                //Console.WriteLine("###########################################");
 
                 priceList.Add(tempData);
 
@@ -458,68 +463,57 @@ namespace FtxApi_Test
                 close = close + item.close;
             }
 
-            Console.WriteLine(priceList.Count);
+            if (priceList.Count >= 3)
+            {
+                if (priceList[0].color == "Red" && priceList[1].color == "Red" && priceList[2].color == "Green")
+                {
+                    var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
+                    Console.WriteLine("Time: " + nowTime);
+                    Console.WriteLine("true");
+                    return true;
+                }
+            }
+
+            //Console.WriteLine(priceList.Count);
             #endregion
 
             #region decide price
             // average price
-            var aveOpen = open / priceList.Count;
-            var aveHigh = high / priceList.Count;
-            var aveLow = low / priceList.Count;
-            var aveClose = close / priceList.Count;
+            //var aveOpen = open / priceList.Count;
+            //var aveHigh = high / priceList.Count;
+            //var aveLow = low / priceList.Count;
+            //var aveClose = close / priceList.Count;
 
-            if (aveOpen < aveClose)
-                color = "Green";
-            else if (aveOpen > aveClose)
-                color = "Red";
-            else
-                color = "White";
+            //if (aveOpen < aveClose)
+            //    color = "Green";
+            //else if (aveOpen > aveClose)
+            //    color = "Red";
+            //else
+            //    color = "White";
 
-            if (priceList.Count == 4)
-            {
-                if (priceList[1].color == "Red" && (priceList[2].color == "Red" || priceList[2].color == "White") && (priceList[3].color == "Red" || priceList[3].color == "White"))
-                {
-                    Console.WriteLine("True");
+            //if (priceList.Count == 4)
+            //{
+            //    if (priceList[1].color == "Red" && priceList[2].color == "Red" && priceList[2].color == "Green")
+            //    {
+            //        Console.WriteLine("True");
 
-                    //var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
-                    //Console.WriteLine("NowTime: " + nowTime);
-                    //Console.WriteLine("###############Color: " + color + "##################");
-                    //Console.WriteLine("###############CanBuy: " + canBuy + "################");
-                    //Console.WriteLine("################Average####################");
-                    //Console.WriteLine("O: " + aveOpen + " H: " + aveHigh + " L: " + aveLow + " C: " + aveClose);
-                    //Console.WriteLine("###########################################");
+            //        //var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
+            //        //Console.WriteLine("NowTime: " + nowTime);
+            //        //Console.WriteLine("###############Color: " + color + "##################");
+            //        //Console.WriteLine("###############CanBuy: " + canBuy + "################");
+            //        //Console.WriteLine("################Average####################");
+            //        //Console.WriteLine("O: " + aveOpen + " H: " + aveHigh + " L: " + aveLow + " C: " + aveClose);
+            //        //Console.WriteLine("###########################################");
 
-                    // return average model
-                    //price.open = aveOpen;
-                    //price.high = aveHigh;
-                    //price.low = aveLow;
-                    //price.close = aveClose;
+            //        // return average model
+            //        //price.open = aveOpen;
+            //        //price.high = aveHigh;
+            //        //price.low = aveLow;
+            //        //price.close = aveClose;
 
-                    return false;
-                }
-            }
-            else
-            {
-                if (priceList[0].color == "Red" && (priceList[1].color == "Red" || priceList[1].color == "White") && (priceList[2].color == "Red" || priceList[2].color == "White"))
-                {
-                    Console.WriteLine("True");
-                    //var nowTime = DateTime.UtcNow.ToLocalTime().ToString("HH:mm:ss");
-                    //Console.WriteLine("NowTime: " + nowTime);
-                    //Console.WriteLine("###############Color: " + color + "##################");
-                    //Console.WriteLine("###############CanBuy: " + canBuy + "################");
-                    //Console.WriteLine("################Average####################");
-                    //Console.WriteLine("O: " + aveOpen + " H: " + aveHigh + " L: " + aveLow + " C: " + aveClose);
-                    //Console.WriteLine("###########################################");
-
-                    // return average model
-                    //price.open = aveOpen;
-                    //price.high = aveHigh;
-                    //price.low = aveLow;
-                    //price.close = aveClose;
-
-                    return false;
-                }
-            }
+            //        return true;
+            //    }
+            //}
             #endregion
 
             return false;
