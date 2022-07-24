@@ -477,7 +477,7 @@ namespace FtxApi_Test
             //Console.WriteLine(priceList.Count);
             #endregion
 
-            #region decide price
+            #region decide up or down
             // average price
             //var aveOpen = open / priceList.Count;
             //var aveHigh = high / priceList.Count;
